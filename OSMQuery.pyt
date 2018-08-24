@@ -11,7 +11,6 @@ class Toolbox(object):
         # List of tool classes associated with this toolbox
         self.tools = [Tool]
 
-
 class Tool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -21,7 +20,29 @@ class Tool(object):
 
     def getParameterInfo(self):
         """Define parameter definitions"""
-        params = None
+        ###let's read the config files with Tags and keys###
+        from os.path import dirname, join, exists, abspath, isfile
+        from json import load
+        json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
+        #json_file_config = r'C:/inetpub/wwwroot/OSMquery/config/tags.json'
+        ###currently C:/inetpub/wwwroot/OSMquery/config.json
+
+
+        param0 = arcpy.Parameter(
+            displayName="Tag",
+            name="in_tag",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        if isfile(json_file_config):
+            with open(json_file_config) as f:
+                config_json = load(f)
+
+        tagArray = []
+        for tag in config_json:
+            tagArray.append(tag)
+        param0.filter.list = tagArray
+        params = [param0]
         return params
 
     def isLicensed(self):
