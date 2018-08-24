@@ -17,32 +17,42 @@ class Tool(object):
         self.label = "Get OSM Data"
         self.description = ""
         self.canRunInBackground = False
-
+    def getConfig(self, configItem):
+        from os.path import dirname, join, exists, abspath, isfile
+        from json import load
+        ###load config file
+        json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
+        if isfile(json_file_config):
+            with open(json_file_config) as f:
+                config_json = load(f)
+        array = []
+        ###select all major tags:
+        if configItem == "all":
+            for tag in config_json:
+                array.append(tag)
+        ###select all keys for the desried tag:
+        if configItem != "all":
+            for key in config_json[configItem]:
+                array.append(key)
+        return array
     def getParameterInfo(self):
         """Define parameter definitions"""
         ###let's read the config files with Tags and keys###
-        from os.path import dirname, join, exists, abspath, isfile
-        from json import load
-        json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
-        #json_file_config = r'C:/inetpub/wwwroot/OSMquery/config/tags.json'
-        ###currently C:/inetpub/wwwroot/OSMquery/config.json
-
-
         param0 = arcpy.Parameter(
             displayName="Tag",
             name="in_tag",
             datatype="GPString",
             parameterType="Required",
             direction="Input")
-        if isfile(json_file_config):
-            with open(json_file_config) as f:
-                config_json = load(f)
-
-        tagArray = []
-        for tag in config_json:
-            tagArray.append(tag)
-        param0.filter.list = tagArray
-        params = [param0]
+        param0.filter.list = self.getConfig('all')
+        param0.value = param0.filter.list[0]
+        param1 = arcpy.Parameter(
+            displayName="Key",
+            name="in_key",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        params = [param0, param1]
         return params
 
     def isLicensed(self):
@@ -53,13 +63,16 @@ class Tool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+        #update the parameters of keys accroding the values of "in_tag"
+        parameters[1].filter.list = self.getConfig(parameters[0].value)
+        #parameters[1].value = parameters[1].filter.list[0]
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
         return
-
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        arcpy.AddMessage("collecting " + parameters[0].value + " " + parameters[1].value)
         return
