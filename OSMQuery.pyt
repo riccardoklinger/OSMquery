@@ -43,7 +43,8 @@ class Tool(object):
             name="in_tag",
             datatype="GPString",
             parameterType="Required",
-            direction="Input")
+            direction="Input"
+        )
         param0.filter.list = self.getConfig('all')
         param0.value = param0.filter.list[0]
         param1 = arcpy.Parameter(
@@ -51,8 +52,16 @@ class Tool(object):
             name="in_key",
             datatype="GPString",
             parameterType="Required",
-            direction="Input")
-        params = [param0, param1]
+            direction="Input"
+        )
+        param2 = arcpy.Parameter(
+            displayName="Area Of Interest",
+            name="in_bbox",
+            datatype="GPExtent",
+            parameterType="Required",
+            direction="Input"
+        )
+        params = [param0, param1, param2]
         return params
 
     def isLicensed(self):
@@ -75,4 +84,7 @@ class Tool(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         arcpy.AddMessage("collecting " + parameters[0].value + " " + parameters[1].value)
+        #currently we only support bbox UL / LR coordinate pairs
+        bbox = [parameters[2].value.YMin,parameters[2].value.XMin,parameters[2].value.YMax,parameters[2].value.XMax]
+        
         return
