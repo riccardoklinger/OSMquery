@@ -35,6 +35,19 @@ class Tool(object):
             for key in config_json[configItem]:
                 array.append(key)
         return array
+    def getServer(self):
+        from os.path import dirname, join, exists, abspath, isfile
+        from json import load
+        ###load config file
+        json_file_config = join(dirname(abspath(__file__)), 'config/servers.json')
+        if isfile(json_file_config):
+            with open(json_file_config) as f:
+                config_json = load(f)
+        array = []
+        ###select all major tags:
+        for server in config_json["overpass_servers"]:
+            array.append(server)
+        return array
     def getParameterInfo(self):
         """Define parameter definitions"""
         ###let's read the config files with Tags and keys###
@@ -62,6 +75,7 @@ class Tool(object):
             direction="Input"
         )
         params = [param0, param1, param2]
+
         return params
 
     def isLicensed(self):
@@ -86,5 +100,19 @@ class Tool(object):
         arcpy.AddMessage("collecting " + parameters[0].value + " " + parameters[1].value)
         #currently we only support bbox UL / LR coordinate pairs
         bbox = [parameters[2].value.YMin,parameters[2].value.XMin,parameters[2].value.YMax,parameters[2].value.XMax]
-        
+        #get data using urllib
+        import json
+        import requests
+        start = "[out:json][timeout:25];("
+        nodeData = 'node["' + parameters[0].value + '"="' + parameters[1].value + '"]'
+        wayData = 'way["' + parameters[0].value + '"="' + parameters[1].value + '"]'
+        relationData = 'relation["' + parameters[0].value + '"="' + parameters[1].value + '"]'
+        bboxData = '(' + ','.join(str(e) for e in bbox) + ');'
+        end = ');out;>;'
+        query = start + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
+        url = "http://overpass-api.de/api/interpreter"
+        arcpy.AddMessage(url)
+        response = requests.get(url,
+                        params={'data': query})
+        data = response.json()
         return
