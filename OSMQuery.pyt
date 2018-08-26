@@ -175,6 +175,7 @@ class Tool(object):
             if element["type"]=="relation":
                 arcpy.AddMessage("parsing relations")
         ###create datamodels
+        arcpy.AddField_management(nodesFC,"OSM_ID", "DOUBLE", 12,0, "",  "OSM_ID")
         for tag in nodeFields:
             try:
                 arcpy.AddField_management(nodesFC, tag.replace(":", ""), "STRING", 255, "", "",  tag.replace(":", "_"), "NULLABLE")
@@ -191,6 +192,9 @@ class Tool(object):
                 row = rowsNodesFC.newRow()
                 PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
                 row.setValue("SHAPE", PtGeometry)
+                arcpy.AddMessage(type(int(element["id"])))
+
+                row.setValue("OSM_ID", element["id"])
                 for tag in element["tags"]:
                     try:
                         row.setValue(tag.replace(":", ""), element["tags"][tag])
