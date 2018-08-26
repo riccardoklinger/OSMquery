@@ -223,7 +223,7 @@ class Tool(object):
                             break
                 pointArray = arcpy.Array(nodeGeoemtry)
                 row.setValue("SHAPE", pointArray)
-                row.setValue("OSM_ID", elemend["id"])
+                row.setValue("OSM_ID", element["id"])
                 ###now deal with the way tags:
                 for tag in element["tags"]:
                     try:
