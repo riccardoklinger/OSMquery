@@ -192,11 +192,9 @@ class Tool(object):
                 arcpy.AddField_management(waysFC, tag.replace(":", ""), "STRING", 255, "", "",  tag.replace(":", "_"), "NULLABLE")
             except:
                 arcpy.AddMessage("failed to add field " + tag)
-        ###add element data to feature classes
-        #def addElementData(element):
+
         rowsNodesFC = arcpy.InsertCursor(nodesFC)
         rowsWaysFC = arcpy.InsertCursor(waysFC)
-
         for element in data['elements']:
             ###we deal with nodes first
             if element["type"]=="node" and "tags" in element:
@@ -216,16 +214,13 @@ class Tool(object):
                 row = rowsWaysFC.newRow()
                 ### getting needed Node Geometries:
                 nodes = element["nodes"]
-                #arcpy.AddMessage(nodes)
                 nodeGeoemtry = []
+                ### finding nodes in reverse mode
                 for node in nodes:
                     for NodeElement in data['elements']:
                         if NodeElement["id"] == node:
                             nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
                             break
-
-                #arcpy.AddMessage("nodeGeoemtry")
-                #arcpy.AddMessage(nodeGeoemtry)
                 pointArray = arcpy.Array(nodeGeoemtry)
                 row.setValue("SHAPE", pointArray)
                 ###now deal with the way tags:
