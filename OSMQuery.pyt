@@ -143,20 +143,23 @@ class Tool(object):
         wayData = 'way["' + parameters[0].value + '"="' + parameters[1].value + '"]'
         relationData = 'relation["' + parameters[0].value + '"="' + parameters[1].value + '"]'
         bboxData = '(' + ','.join(str(e) for e in bbox) + ');'
-        end = ');out;>;'
+        end = ');(._;>;);out;>;'
         query = start + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
         url = "http://overpass-api.de/api/interpreter"
         arcpy.AddMessage(url)
         response = requests.get(url,
                         params={'data': query})
         data = response.json()
+        arcpy.AddMessage("collected " + str(len(data["elements"])) + " objects")
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
         import time
         time =  int(time.time())
-        arcpy.AddMessage((time))
-        nodesFCName = "Nodes" + str(time)
+        nodesFCName = "Nodes_" + str(time)
+        waysFCName = "Ways_" + str(time)
         nodesFC = arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, nodesFCName, "POINT", "", "DISABLED", "DISABLED", arcpy.SpatialReference(4326), "")
+        waysFC = arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, waysFCName, "POLYLINE", "", "DISABLED", "DISABLED", arcpy.SpatialReference(4326), "")
+
         ###reading data model as tags can be very broad
         nodeFields = []
         wayFields = []
@@ -168,32 +171,38 @@ class Tool(object):
             return array
         for element in data['elements']:
             #fields = arcpy.Describe(nodesFC).fields
-            if element["type"]=="node":
-                nodeFields = createFieldArray(element, nodeFields)
-            if element["type"]=="way":
-                arcpy.AddMessage("parsing ways")
-            if element["type"]=="relation":
-                arcpy.AddMessage("parsing relations")
+            if "tags" in element:
+                if element["type"]=="node":
+                    nodeFields = createFieldArray(element, nodeFields)
+                if element["type"]=="way":
+                    wayFields = createFieldArray(element, wayFields)
+                    #arcpy.AddMessage("parsing ways")
+                if element["type"]=="relation":
+                    arcpy.AddMessage("parsing relations")
         ###create datamodels
         arcpy.AddField_management(nodesFC,"OSM_ID", "DOUBLE", 12,0, "",  "OSM_ID")
+        arcpy.AddField_management(waysFC,"OSM_ID", "DOUBLE", 12,0, "",  "OSM_ID")
         for tag in nodeFields:
             try:
                 arcpy.AddField_management(nodesFC, tag.replace(":", ""), "STRING", 255, "", "",  tag.replace(":", "_"), "NULLABLE")
             except:
                 arcpy.AddMessage("failed to add field " + tag)
+        for tag in wayFields:
+            try:
+                arcpy.AddField_management(waysFC, tag.replace(":", ""), "STRING", 255, "", "",  tag.replace(":", "_"), "NULLABLE")
+            except:
+                arcpy.AddMessage("failed to add field " + tag)
         ###add element data to feature classes
         #def addElementData(element):
         rowsNodesFC = arcpy.InsertCursor(nodesFC)
-        rowsWaysFC = arcpy.InsertCursor(nodesFC)
-        rowsRelationsFC = arcpy.InsertCursor(nodesFC)
+        rowsWaysFC = arcpy.InsertCursor(waysFC)
+
         for element in data['elements']:
             ###we deal with nodes first
-            if element["type"]=="node":
+            if element["type"]=="node" and "tags" in element:
                 row = rowsNodesFC.newRow()
                 PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
                 row.setValue("SHAPE", PtGeometry)
-                arcpy.AddMessage(type(int(element["id"])))
-
                 row.setValue("OSM_ID", element["id"])
                 for tag in element["tags"]:
                     try:
@@ -203,10 +212,35 @@ class Tool(object):
                 rowsNodesFC.insertRow(row)
                 del row
             if element["type"]=="way":
-                arcpy.AddMessage("parsing ways")
+                arcpy.AddMessage("dealing with way " + str(element["id"]))
+                row = rowsWaysFC.newRow()
+                ### getting needed Node Geometries:
+                nodes = element["nodes"]
+                #arcpy.AddMessage(nodes)
+                nodeGeoemtry = []
+                for node in nodes:
+                    for NodeElement in data['elements']:
+                        if NodeElement["id"] == node:
+                            nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
+                            break
+
+                #arcpy.AddMessage("nodeGeoemtry")
+                #arcpy.AddMessage(nodeGeoemtry)
+                pointArray = arcpy.Array(nodeGeoemtry)
+                row.setValue("SHAPE", pointArray)
+                ###now deal with the way tags:
+                for tag in element["tags"]:
+                    try:
+                        row.setValue(tag.replace(":", ""), element["tags"][tag])
+                    except:
+                        arcpy.AddMessage("adding value failed")
+                rowsWaysFC.insertRow(row)
+                del row
             if element["type"]=="relation":
                 arcpy.AddMessage("parsing relations")
         del rowsNodesFC
+        del rowsWaysFC
         import os
         parameters[3].value = arcpy.env.scratchWorkspace + os.sep + nodesFCName
+        parameters[4].value = arcpy.env.scratchWorkspace + os.sep + waysFCName
         return
