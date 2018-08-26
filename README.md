@@ -6,3 +6,7 @@ Download this repo and place it somewhere. Either add it using the "connect to f
 ![Toolbox in ArcMAP](https://i.imgur.com/dpVzy3g.png)
 ## Usage
 Select a tag and key pair and define a bounding box using coordinates given in the [EPSG 4326](https://epsg.io/4326).
+
+After geoprocessing finished, the results will be drawn on the map and two feature classes will be stored in the scratch workspace! If you need them later on, store them separately.
+
+![results in ArcGIS Pro](https://i.imgur.com/voTjY0S.png)
