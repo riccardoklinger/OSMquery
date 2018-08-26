@@ -170,7 +170,7 @@ class Tool(object):
                     array.append(tag)
             return array
         for element in data['elements']:
-            #fields = arcpy.Describe(nodesFC).fields
+            ###some elements don't have tags.
             if "tags" in element:
                 if element["type"]=="node":
                     nodeFields = createFieldArray(element, nodeFields)
