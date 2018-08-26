@@ -182,11 +182,13 @@ class Tool(object):
                 arcpy.AddMessage("failed to add field " + tag)
         ###add element data to feature classes
         #def addElementData(element):
+        rowsNodesFC = arcpy.InsertCursor(nodesFC)
+        rowsWaysFC = arcpy.InsertCursor(nodesFC)
+        rowsRelationsFC = arcpy.InsertCursor(nodesFC)
         for element in data['elements']:
             ###we deal with nodes first
             if element["type"]=="node":
-                rows = arcpy.InsertCursor(nodesFC, )
-                row = rows.newRow()
+                row = rowsNodesFC.newRow()
                 PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
                 row.setValue("SHAPE", PtGeometry)
                 for tag in element["tags"]:
@@ -194,14 +196,13 @@ class Tool(object):
                         row.setValue(tag.replace(":", ""), element["tags"][tag])
                     except:
                         arcpy.AddMessage("adding value failed")
-                rows.insertRow(row)
+                rowsNodesFC.insertRow(row)
+                del row
             if element["type"]=="way":
                 arcpy.AddMessage("parsing ways")
             if element["type"]=="relation":
                 arcpy.AddMessage("parsing relations")
-        fields = arcpy.Describe(nodesFC).fields
-        for field in fields:
-            arcpy.AddMessage(field)
+        del rowsNodesFC
         import os
         parameters[3].value = arcpy.env.scratchWorkspace + os.sep + nodesFCName
         return
