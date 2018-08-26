@@ -1,0 +1,662 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.55.4 3079d8ea",
+  "osm3s": {
+    "timestamp_osm_base": "2018-08-24T20:23:02Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 256093003,
+  "lat": 50.4238028,
+  "lon": 7.4404596,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "mennonite",
+    "name": "Mennonitische Brüdergemeinschaft",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 292287576,
+  "lat": 50.3746494,
+  "lon": 7.4273074,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "catholic",
+    "name": "Kapelle am Kreuzberg",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 304764504,
+  "lat": 50.3971753,
+  "lon": 7.4639855,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "church",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 313158146,
+  "lat": 50.3451312,
+  "lon": 7.4226730,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Marienkapelle",
+    "religion": "christian",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 319002558,
+  "lat": 50.3793239,
+  "lon": 7.4155595,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Kapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 319002564,
+  "lat": 50.3765963,
+  "lon": 7.4194264,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Kapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 321600305,
+  "lat": 50.3839071,
+  "lon": 7.4780299,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Bergkapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 331238134,
+  "lat": 50.3283182,
+  "lon": 7.3109787,
+  "tags": {
+    "amenity": "place_of_worship",
+    "created_by": "Potlatch 0.10f",
+    "name": "Alte Kirche",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 409761432,
+  "lat": 50.4213072,
+  "lon": 7.4126882,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "jehovahs_witness",
+    "name": "Königreichssaal",
+    "religion": "christian",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "node",
+  "id": 409761438,
+  "lat": 50.4212433,
+  "lon": 7.4142132,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "pentecostal",
+    "denomination:de": "Bund Freier Pfingstgemeinden",
+    "name": "Jesus-Haus, Freie Christen Gemeinde",
+    "religion": "christian",
+    "wheelchair": "limited"
+  }
+},
+{
+  "type": "node",
+  "id": 410691665,
+  "lat": 50.4470414,
+  "lon": 7.4459600,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Kapelle",
+    "religion": "christian",
+    "wheelchair": "limited"
+  }
+},
+{
+  "type": "node",
+  "id": 459728647,
+  "lat": 50.3758377,
+  "lon": 7.4199892,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Friedhofskapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 476758864,
+  "lat": 50.5913507,
+  "lon": 7.3454820,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "catholic",
+    "name": "Pfarrkirche St. Katharina",
+    "religion": "christian",
+    "toilets:wheelchair": "no",
+    "wheelchair": "limited"
+  }
+},
+{
+  "type": "node",
+  "id": 533972585,
+  "lat": 50.3524433,
+  "lon": 7.3131504,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Fraukirch",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 540228452,
+  "lat": 50.5142929,
+  "lon": 7.3788721,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Gebildeichshäuschen"
+  }
+},
+{
+  "type": "node",
+  "id": 656119449,
+  "lat": 50.3941722,
+  "lon": 7.4091422,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Kapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 764084471,
+  "lat": 50.4885400,
+  "lon": 7.3211701,
+  "tags": {
+    "amenity": "place_of_worship",
+    "historic": "wayside_shrine",
+    "name": "Heiligenhäuschen (Maria)",
+    "religion": "christian",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 764084574,
+  "lat": 50.4836750,
+  "lon": 7.3113534,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "catholic",
+    "name": "Kapelle",
+    "religion": "christian",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "node",
+  "id": 866907193,
+  "lat": 50.3737764,
+  "lon": 7.2776180,
+  "tags": {
+    "amenity": "place_of_worship",
+    "religion": "christian",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "node",
+  "id": 1095491891,
+  "lat": 50.3654370,
+  "lon": 7.3805263,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Kapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 1099822543,
+  "lat": 50.4377207,
+  "lon": 7.4724573,
+  "tags": {
+    "addr:city": "Neuwied",
+    "addr:postcode": "56564",
+    "addr:street": "Sohler Weg",
+    "amenity": "place_of_worship",
+    "name": "Aussegnungshalle",
+    "religion": "christian",
+    "wheelchair:description": "neue Rollirampe am Eingang"
+  }
+},
+{
+  "type": "node",
+  "id": 1214854701,
+  "lat": 50.5727919,
+  "lon": 7.4695803,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "catholic",
+    "name": "St. Quirin",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 1313339750,
+  "lat": 50.4399602,
+  "lon": 7.2704749,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "catholic",
+    "name": "Kapelle im Nücker",
+    "opening_hours": "24/7",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 1336699659,
+  "lat": 50.5445426,
+  "lon": 7.4113433,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Lourdesgrotte"
+  }
+},
+{
+  "type": "node",
+  "id": 1343687076,
+  "lat": 50.3576227,
+  "lon": 7.2751942,
+  "tags": {
+    "amenity": "place_of_worship",
+    "religion": "christian",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "node",
+  "id": 1384211132,
+  "lat": 50.4382728,
+  "lon": 7.2728412,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "catholic",
+    "opening_hours": "24/7",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 1424115334,
+  "lat": 50.4392316,
+  "lon": 7.4050268,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "old_catholic",
+    "name": "Burgkapelle",
+    "religion": "christian",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "node",
+  "id": 1491786619,
+  "lat": 50.5042130,
+  "lon": 7.4937950,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "jehovahs_witness",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 1658377106,
+  "lat": 50.4628024,
+  "lon": 7.4657884,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "mennonite",
+    "name": "Mennoniten-Brüdergemeinde Neuwied",
+    "religion": "christian",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 1843791075,
+  "lat": 50.5019034,
+  "lon": 7.4923567,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "protestant",
+    "name": "Evangelische Kirche Rengsdorf",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 2076167276,
+  "lat": 50.4566560,
+  "lon": 7.2835378,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "evangelical",
+    "name": "Apostelkirche",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 2448039120,
+  "lat": 50.5922184,
+  "lon": 7.3397748,
+  "tags": {
+    "amenity": "place_of_worship"
+  }
+},
+{
+  "type": "node",
+  "id": 2524915401,
+  "lat": 50.5603290,
+  "lon": 7.3157883,
+  "tags": {
+    "amenity": "place_of_worship",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 2564492501,
+  "lat": 50.5037633,
+  "lon": 7.3063685,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Ev. Kirchengemeinde",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 2635150181,
+  "lat": 50.5438403,
+  "lon": 7.4321918,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Luhkapellchen"
+  }
+},
+{
+  "type": "node",
+  "id": 2635643579,
+  "lat": 50.5508864,
+  "lon": 7.4188253,
+  "tags": {
+    "amenity": "place_of_worship",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 2650314850,
+  "lat": 50.5399303,
+  "lon": 7.4202484,
+  "tags": {
+    "amenity": "place_of_worship",
+    "religion": "christian",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 2729746238,
+  "lat": 50.4555851,
+  "lon": 7.3320793,
+  "tags": {
+    "amenity": "place_of_worship",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 2906079175,
+  "lat": 50.5634798,
+  "lon": 7.4539960,
+  "tags": {
+    "amenity": "place_of_worship"
+  }
+},
+{
+  "type": "node",
+  "id": 3398785297,
+  "lat": 50.4271314,
+  "lon": 7.4063356,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "baptist",
+    "name": "Evangelisch-Freikirchliche Gemeinde",
+    "religion": "christian",
+    "source": "http://www.efg-andernach.de"
+  }
+},
+{
+  "type": "node",
+  "id": 3583238405,
+  "lat": 50.4401975,
+  "lon": 7.4743918,
+  "tags": {
+    "addr:city": "Neuwied",
+    "addr:housenumber": "1",
+    "addr:postcode": "56564",
+    "addr:street": "An der Liebfrauenkirche",
+    "amenity": "place_of_worship",
+    "name": "Liebfrauenkirche",
+    "religion": "christian",
+    "wheelchair": "limited",
+    "wheelchair:description": "Kirche stufenfrei"
+  }
+},
+{
+  "type": "node",
+  "id": 3642231606,
+  "lat": 50.4538311,
+  "lon": 7.3616671,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "chapel",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 3922332776,
+  "lat": 50.5796152,
+  "lon": 7.2760384,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Kreuz",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4017609497,
+  "lat": 50.3479478,
+  "lon": 7.4013203,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Antonius-Kapelle"
+  }
+},
+{
+  "type": "node",
+  "id": 4485916248,
+  "lat": 50.4638116,
+  "lon": 7.2857970,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "chapel",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4548268166,
+  "lat": 50.4564444,
+  "lon": 7.3060718,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "chapel",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4585775930,
+  "lat": 50.4769049,
+  "lon": 7.3258607,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "chapel",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4708775653,
+  "lat": 50.5524931,
+  "lon": 7.4195462,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Antoniuskapelle"
+  }
+},
+{
+  "type": "node",
+  "id": 4896086108,
+  "lat": 50.4340378,
+  "lon": 7.4197702,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "baptist",
+    "name": "Evangelische Freikirche e.V",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4896086726,
+  "lat": 50.4360937,
+  "lon": 7.4212100,
+  "tags": {
+    "amenity": "place_of_worship",
+    "name": "Friedhofskapelle",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4897145512,
+  "lat": 50.4546266,
+  "lon": 7.2703005,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "wayside_chapel",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4898398766,
+  "lat": 50.4404627,
+  "lon": 7.3939589,
+  "tags": {
+    "amenity": "place_of_worship",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4920579633,
+  "lat": 50.3972521,
+  "lon": 7.4210293,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "chapel",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 4923001055,
+  "lat": 50.4374796,
+  "lon": 7.3963212,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "sunni",
+    "name": "DITIB",
+    "religion": "muslim"
+  }
+},
+{
+  "type": "node",
+  "id": 5216642009,
+  "lat": 50.5117595,
+  "lon": 7.3107013,
+  "tags": {
+    "amenity": "place_of_worship",
+    "denomination": "evangelical",
+    "name": "Evangelisch Trinitatis-Kirchengemeinde",
+    "religion": "christian"
+  }
+},
+{
+  "type": "node",
+  "id": 5316050801,
+  "lat": 50.4517806,
+  "lon": 7.4322402,
+  "tags": {
+    "amenity": "place_of_worship",
+    "building": "church",
+    "deanery": "Evangelischer Kirchenkreis Wied",
+    "denomination": "protestant",
+    "diocese": "Evangelische Kirche im Rheinland",
+    "name": "Feldkirche",
+    "parish": "Evangelische Kirchengemeinde Feldkirchen-Altwied",
+    "religion": "christian"
+  }
+}
+
+  ]
+}

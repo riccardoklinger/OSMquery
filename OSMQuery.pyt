@@ -1,5 +1,26 @@
-import arcpy
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ OSMQuery
+ A Python toolbox for ArcGIS
+ OSM Overpass API frontend
+                             -------------------
+        begin                : 2018-08-20
+        copyright            : (C) 2018 by Riccardo Klinger
+        email                : riccardo.klinger at gmail dot com
+        contributor          : Riccardo Klinger
+ ***************************************************************************/
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+"""
 
+import arcpy
 
 class Toolbox(object):
     def __init__(self):
@@ -74,7 +95,21 @@ class Tool(object):
             parameterType="Required",
             direction="Input"
         )
-        params = [param0, param1, param2]
+        param_out0 = arcpy.Parameter(
+            displayName="Layer Containing the Nodes",
+            name="out_nodes",
+            datatype="GPFeatureLayer",
+            parameterType="Derived",
+            direction="Output"
+        )
+        param_out1 = arcpy.Parameter(
+            displayName="Layer Containing the Ways",
+            name="out_ways",
+            datatype="GPFeatureLayer",
+            parameterType="Derived",
+            direction="Output"
+        )
+        params = [param0, param1, param2, param_out0, param_out1]
 
         return params
 
@@ -115,4 +150,58 @@ class Tool(object):
         response = requests.get(url,
                         params={'data': query})
         data = response.json()
+        arcpy.env.overwriteOutput = True
+        arcpy.env.addOutputsToMap = True
+        import time
+        time =  int(time.time())
+        arcpy.AddMessage((time))
+        nodesFCName = "Nodes" + str(time)
+        nodesFC = arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, nodesFCName, "POINT", "", "DISABLED", "DISABLED", arcpy.SpatialReference(4326), "")
+        ###reading data model as tags can be very broad
+        nodeFields = []
+        wayFields = []
+        relationsFields = []
+        def createFieldArray(element, array):
+            for tag in element["tags"]:
+                if tag not in array:
+                    array.append(tag)
+            return array
+        for element in data['elements']:
+            #fields = arcpy.Describe(nodesFC).fields
+            if element["type"]=="node":
+                nodeFields = createFieldArray(element, nodeFields)
+            if element["type"]=="way":
+                arcpy.AddMessage("parsing ways")
+            if element["type"]=="relation":
+                arcpy.AddMessage("parsing relations")
+        ###create datamodels
+        for tag in nodeFields:
+            try:
+                arcpy.AddField_management(nodesFC, tag.replace(":", ""), "STRING", 255, "", "",  tag.replace(":", "_"), "NULLABLE")
+            except:
+                arcpy.AddMessage("failed to add field " + tag)
+        ###add element data to feature classes
+        #def addElementData(element):
+        for element in data['elements']:
+            ###we deal with nodes first
+            if element["type"]=="node":
+                rows = arcpy.InsertCursor(nodesFC, )
+                row = rows.newRow()
+                PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
+                row.setValue("SHAPE", PtGeometry)
+                for tag in element["tags"]:
+                    try:
+                        row.setValue(tag.replace(":", ""), element["tags"][tag])
+                    except:
+                        arcpy.AddMessage("adding value failed")
+                rows.insertRow(row)
+            if element["type"]=="way":
+                arcpy.AddMessage("parsing ways")
+            if element["type"]=="relation":
+                arcpy.AddMessage("parsing relations")
+        fields = arcpy.Describe(nodesFC).fields
+        for field in fields:
+            arcpy.AddMessage(field)
+        import os
+        parameters[3].value = arcpy.env.scratchWorkspace + os.sep + nodesFCName
         return
