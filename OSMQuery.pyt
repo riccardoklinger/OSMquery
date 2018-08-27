@@ -89,10 +89,26 @@ class Tool(object):
             direction="Input"
         )
         param2 = arcpy.Parameter(
+            displayName="Spatial Extent",
+            name="in_regMode",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input"
+        )
+        param2.filter.list = ["geocode region","define simple bounding box"]
+        param2.value = "geocode region"
+        param3 = arcpy.Parameter(
+            displayName="Region",
+            name="in_region",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input"
+        )
+        param4 = arcpy.Parameter(
             displayName="Area Of Interest",
             name="in_bbox",
             datatype="GPExtent",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input"
         )
         param_out0 = arcpy.Parameter(
@@ -116,7 +132,7 @@ class Tool(object):
             parameterType="Derived",
             direction="Output"
         )
-        params = [param0, param1, param2, param_out0, param_out1, param_out2]
+        params = [param0, param1, param2, param3, param4, param_out0, param_out1, param_out2]
 
         return params
 
@@ -130,6 +146,12 @@ class Tool(object):
         has been changed."""
         #update the parameters of keys accroding the values of "in_tag"
         parameters[1].filter.list = self.getConfig(parameters[0].value)
+        if parameters[2].value == "geocode region":
+            parameters[3].enabled = True
+            parameters[4].enabled = False
+        else:
+            parameters[3].enabled = False
+            parameters[4].enabled = True
         #parameters[1].value = parameters[1].filter.list[0]
         return
 
@@ -140,27 +162,58 @@ class Tool(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         arcpy.AddMessage("collecting " + parameters[0].value + " " + parameters[1].value)
-        #currently we only support bbox UL / LR coordinate pairs
-        bbox = [parameters[2].value.YMin,parameters[2].value.XMin,parameters[2].value.YMax,parameters[2].value.XMax]
-        #get data using urllib
         import json
         import requests
+        url = "http://overpass-api.de/api/interpreter"
         start = "[out:json][timeout:25];("
+        if parameters[2].value != "geocode region":
+            bboxHead = ''
+            bbox = [parameters[4].value.YMin,parameters[4].value.XMin,parameters[4].value.YMax,parameters[4].value.XMax]
+            bboxData = '(' + ','.join(str(e) for e in bbox) + ');'
+        else:
+            ###getting areaID from Nominatim:
+            nominatimURL = 'https://nominatim.openstreetmap.org/search?q=' + parameters[3].valueAsText + '&format=json'
+            NominatimResponse = requests.get(nominatimURL)
+            arcpy.AddMessage("gecode region using the url " + nominatimURL)
+            try:
+                NominatimData = NominatimResponse.json()
+
+                for result in NominatimData:
+                    if result["osm_type"] == "relation":
+                        areaID = result['osm_id']
+                        try:
+                            arcpy.AddMessage("found area " + result['display_name'])
+                        except:
+                            arcpy.AddMessage("found area " + str(areaID))
+                        break
+                bboxHead = 'area(' + str(int(areaID) + 3600000000) + ')->.searchArea;'
+                bboxData = '(area.searchArea);'
+            except:
+                arcpy.AddError("no area found!")
+                return
+        #get data using urllib
         nodeData = 'node["' + parameters[0].value + '"="' + parameters[1].value + '"]'
         wayData = 'way["' + parameters[0].value + '"="' + parameters[1].value + '"]'
         relationData = 'relation["' + parameters[0].value + '"="' + parameters[1].value + '"]'
-        bboxData = '(' + ','.join(str(e) for e in bbox) + ');'
         end = ');(._;>;);out;>;'
-        query = start + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
-        url = "http://overpass-api.de/api/interpreter"
-        arcpy.AddMessage(url)
-        response = requests.get(url,
-                        params={'data': query})
-        data = response.json()
-        arcpy.AddMessage("collected " + str(len(data["elements"])) + " objects")
+        query = start + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
+        arcpy.AddMessage("Overpass API Query:")
+        arcpy.AddMessage(query)
+        response = requests.get(url,params={'data': query})
+        if response.status_code!=200:
+            arcpy.AddMessage("server response was " + str(response.status_code) )
+            return
+        try:
+            data = response.json()
+        except:
+            arcpy.AddMessage("server responded with non JSON data: ")
+            arcpy.AddError(response.text)
+            return
         if len(data["elements"]) == 0:
             arcpy.AddMessage("No data found!")
             return
+        else:
+            arcpy.AddMessage("collected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
         ###determine sorts of feature classes:
@@ -191,7 +244,7 @@ class Tool(object):
                 for tag in nodeFields:
                     try:
                         arcpy.AddField_management(nodesFC, tag.replace(":", ""), "STRING", 255, "", "",  tag.replace(":", "_"), "NULLABLE")
-                        arcpy.AddMessage("adding field " + tag + "  to point shapefile")
+                        arcpy.AddMessage("adding field " + tag + " to point shapefile")
                     except:
                         arcpy.AddMessage("adding field " + tag + " failed")
                 pointsCreated = True
@@ -293,11 +346,11 @@ class Tool(object):
         import os
         if pointsCreated == True:
             del rowsNodesFC
-            parameters[3].value = arcpy.env.scratchWorkspace + os.sep + nodesFCName
+            parameters[5].value = arcpy.env.scratchWorkspace + os.sep + nodesFCName
         if linesCreated == True:
             del rowsWaysFC
-            parameters[4].value = arcpy.env.scratchWorkspace + os.sep + waysFCName
+            parameters[6].value = arcpy.env.scratchWorkspace + os.sep + waysFCName
         if polygonsCreated == True:
             del rowsPolyFC
-            parameters[5].value = arcpy.env.scratchWorkspace + os.sep + polysFCName
+            parameters[7].value = arcpy.env.scratchWorkspace + os.sep + polysFCName
         return
