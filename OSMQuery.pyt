@@ -197,16 +197,17 @@ class Tool(object):
         rowsWaysFC = arcpy.InsertCursor(waysFC)
         for element in data['elements']:
             ###we deal with nodes first
-            if element["type"]=="node" and "tags" in element:
+            if element["type"]=="node":
                 row = rowsNodesFC.newRow()
                 PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
                 row.setValue("SHAPE", PtGeometry)
                 row.setValue("OSM_ID", element["id"])
-                for tag in element["tags"]:
-                    try:
-                        row.setValue(tag.replace(":", ""), element["tags"][tag])
-                    except:
-                        arcpy.AddMessage("adding value failed")
+                 if "tags" in element:
+                    for tag in element["tags"]:
+                        try:
+                            row.setValue(tag.replace(":", ""), element["tags"][tag])
+                        except:
+                            arcpy.AddMessage("adding value failed")
                 rowsNodesFC.insertRow(row)
                 del row
             if element["type"]=="way":
@@ -225,11 +226,12 @@ class Tool(object):
                 row.setValue("SHAPE", pointArray)
                 row.setValue("OSM_ID", element["id"])
                 ###now deal with the way tags:
-                for tag in element["tags"]:
-                    try:
-                        row.setValue(tag.replace(":", ""), element["tags"][tag])
-                    except:
-                        arcpy.AddMessage("adding value failed")
+                if "tags" in element:
+                    for tag in element["tags"]:
+                        try:
+                            row.setValue(tag.replace(":", ""), element["tags"][tag])
+                        except:
+                            arcpy.AddMessage("adding value failed")
                 rowsWaysFC.insertRow(row)
                 del row
             if element["type"]=="relation":
