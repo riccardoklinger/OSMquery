@@ -202,7 +202,7 @@ class Tool(object):
                 PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
                 row.setValue("SHAPE", PtGeometry)
                 row.setValue("OSM_ID", element["id"])
-                 if "tags" in element:
+                if "tags" in element:
                     for tag in element["tags"]:
                         try:
                             row.setValue(tag.replace(":", ""), element["tags"][tag])
