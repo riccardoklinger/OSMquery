@@ -1,5 +1,5 @@
 # OSMquery
-Query OSM data for defined key-value pairs (tags) and area of interest, and add the results to your ArcGIS project as feature layers. The tool is supposed to work using ArcGIS Pro and ArcGIS Desktop 10.x (ArcMap).
+Query OSM data for defined key-value pairs (tags) and an area of interest and add the results to your ArcGIS project as feature layers. The tool is supposed to work using ArcGIS Pro and ArcGIS Desktop 10.x.
 
 ## Installation
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
