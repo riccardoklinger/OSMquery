@@ -47,6 +47,7 @@ class Tool(object):
             with open(json_file_config) as f:
                 config_json = load(f)
         array = []
+        ###configuration file was used from quickOSM by 3LIZ/Etienne Trimaille: https://github.com/3liz/QuickOSM
         ###select all major tags:
         if configItem == "all":
             for tag in config_json:
