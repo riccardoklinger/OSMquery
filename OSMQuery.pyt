@@ -165,6 +165,11 @@ class Tool(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
 
+        # Constants for building the query to the Overpass API
+        QUERY_URL = "http://overpass-api.de/api/interpreter"
+        QUERY_START = "[out:json][timeout:25];("
+        QUERY_END = ');(._;>;);out;>;'
+
         def create_result_fc(geometry_type, fields):
             fc_name = '%ss_%s' % (geometry_type, str(timestamp))
             fc = join(arcpy.env.scratchWorkspace, fc_name)
@@ -188,8 +193,6 @@ class Tool(object):
 
         keys = parameters[1].value.exportToString().split(";")
         arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + "|".join(keys))
-        url = "http://overpass-api.de/api/interpreter"
-        start = "[out:json][timeout:25];("
         
         if parameters[2].value != "geocode region":
             bboxHead = ''
@@ -237,11 +240,11 @@ class Tool(object):
             nodeData = 'node["' + parameters[0].value + '"]'
             wayData = 'way["' + parameters[0].value + '"]'
             relationData = 'relation["' + parameters[0].value + '"]'
-        end = ');(._;>;);out;>;'
-        query = start + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
+
+        query = QUERY_START + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + QUERY_END
         arcpy.AddMessage("Overpass API Query:")
         arcpy.AddMessage(query)
-        response = requests.get(url,params={'data': query})
+        response = requests.get(QUERY_URL, params={'data': query})
         if response.status_code!=200:
             arcpy.AddMessage("server response was " + str(response.status_code) )
             return
