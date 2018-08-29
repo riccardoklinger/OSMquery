@@ -215,7 +215,7 @@ class Tool(object):
             wayData = 'way["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             relationData = 'relation["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
         #replace any query if star is selected:
-        if "* (any value, including the ones listed below)" in keys:
+        if "*" in keys:
             nodeData = 'node["' + parameters[0].value + '"]'
             wayData = 'way["' + parameters[0].value + '"]'
             relationData = 'relation["' + parameters[0].value + '"]'

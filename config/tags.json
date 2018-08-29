@@ -1,5 +1,5 @@
 {
-	"admin_level": ["* (any value, including the ones listed below)",
+	"admin_level": ["*",
 		"1",
 		"2",
 		"3",
@@ -11,7 +11,7 @@
 		"10",
 		"11"
 	],
-	"amenity": ["* (any value, including the ones listed below)",
+	"amenity": ["*",
 		"animal_boarding",
 		"animal_shelter",
 		"arts_centre",
@@ -76,14 +76,14 @@
 		"vending_machine",
 		"veterinary"
 	],
-	"boundary": ["* (any value, including the ones listed below)",
+	"boundary": ["*",
 		"administrative",
 		"maritime",
 		"national_park",
 		"religious_administration",
 		"protected_area"
 	],
-	"building": ["* (any value, including the ones listed below)",
+	"building": ["*",
 		"apartments",
 		"commercial",
 		"farm",
@@ -93,7 +93,7 @@
 		"retail",
 		"yes"
 	],
-	"cuisine": ["* (any value, including the ones listed below)",
+	"cuisine": ["*",
 		"bagel",
 		"barbecue",
 		"bougatsa",
@@ -135,7 +135,7 @@
 		"vegetarian",
 		"wings"
 	],
-	"craft": ["* (any value, including the ones listed below)",
+	"craft": ["*",
 		"agricultural_engines",
 		"basket_maker",
 		"beekeeper",
@@ -163,7 +163,7 @@
 		"watchmaker",
 		"winery"
 	],
-	"emergency": ["* (any value, including the ones listed below)",
+	"emergency": ["*",
 		"ambulance_station",
 		"assembly_point",
 		"defibrillator",
@@ -173,10 +173,10 @@
 		"siren",
 		"water_tank"
 	],
-	"evacuation_center": ["* (any value, including the ones listed below)",
+	"evacuation_center": ["*",
 		"yes"
 	],
-	"highway": ["* (any value, including the ones listed below)",
+	"highway": ["*",
 		"motorway",
 		"trunk",
 		"primary",
@@ -203,7 +203,7 @@
 		"traffic_signals",
 		"turning_circle"
 	],
-	"cycleway": ["* (any value, including the ones listed below)",
+	"cycleway": ["*",
 		"lane",
 		"opposite",
 		"opposite_lane",
@@ -212,13 +212,13 @@
 		"share_busway",
 		"shared_lane"
 	],
-	"junction": ["* (any value, including the ones listed below)",
+	"junction": ["*",
 		"roundabout",
 		"jughandle",
 		"filter",
 		"yes"
 	],
-	"historic": ["* (any value, including the ones listed below)",
+	"historic": ["*",
 		"archaeological_site",
 		"aircraft",
 		"battlefield",
@@ -240,7 +240,7 @@
 		"wayside_shrine",
 		"yes"
 	],
-	"landuse": ["* (any value, including the ones listed below)",
+	"landuse": ["*",
 		"allotments",
 		"basin",
 		"brownfield",
@@ -266,7 +266,7 @@
 		"retail",
 		"vineyard"
 	],
-	"leisure": ["* (any value, including the ones listed below)",
+	"leisure": ["*",
 		"fishing",
 		"garden",
 		"golf_course",
@@ -283,7 +283,7 @@
 		"track",
 		"water_park"
 	],
-	"man_made": ["* (any value, including the ones listed below)",
+	"man_made": ["*",
 		"chimney",
 		"cross",
 		"lighthouse",
@@ -296,7 +296,7 @@
 		"works",
 		"yes"
 	],
-	"natural": ["* (any value, including the ones listed below)",
+	"natural": ["*",
 		"bay",
 		"beach",
 		"cave_entrance",
@@ -323,7 +323,7 @@
 		"wetland",
 		"wood"
 	],
-	"office": ["* (any value, including the ones listed below)",
+	"office": ["*",
 		"accountant",
 		"administrative",
 		"architect",
@@ -352,7 +352,7 @@
 		"travel_agent",
 		"water_utility"
 	],
-	"place": ["* (any value, including the ones listed below)",
+	"place": ["*",
 		"allotments",
 		"archipelago",
 		"city",
@@ -375,7 +375,7 @@
 		"town",
 		"village"
 	],
-	"power": ["* (any value, including the ones listed below)",
+	"power": ["*",
 		"cable",
 		"plant",
 		"generator",
@@ -387,13 +387,13 @@
 		"tower",
 		"transformer"
 	],
-	"public_transport": ["* (any value, including the ones listed below)",
+	"public_transport": ["*",
 		"stop_position",
 		"platform",
 		"station",
 		"stop_area"
 	],
-	"shop": ["* (any value, including the ones listed below)",
+	"shop": ["*",
 		"alcohol",
 		"antiques",
 		"art",
@@ -494,7 +494,7 @@
 		"weapons",
 		"wine"
 	],
-	"sport": ["* (any value, including the ones listed below)",
+	"sport": ["*",
 		"9pin",
 		"10pin",
 		"american_football",
@@ -539,7 +539,7 @@
 		"tennis",
 		"volleyball"
 	],
-	"railway": ["* (any value, including the ones listed below)",
+	"railway": ["*",
 		"abandonned",
 		"buffer_stop",
 		"construction",
@@ -559,7 +559,7 @@
 		"tram",
 		"tram_stop"
 	],
-	"route": ["* (any value, including the ones listed below)",
+	"route": ["*",
 		"bicycle",
 		"bus",
 		"ferry",
@@ -574,7 +574,7 @@
 		"train",
 		"tram"
 	],
-	"tourism": ["* (any value, including the ones listed below)",
+	"tourism": ["*",
 		"alpine_hut",
 		"apartement",
 		"attraction",
@@ -595,7 +595,7 @@
 		"zoo",
 		"yes"
 	],
-	"waterway": ["* (any value, including the ones listed below)",
+	"waterway": ["*",
 		"canal",
 		"ditch",
 		"dam",
