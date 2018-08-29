@@ -169,7 +169,7 @@ class Tool(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         keys = parameters[1].value.exportToString().split(";")
-        arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + "|".join(keys))
+
         url = "http://overpass-api.de/api/interpreter"
         start = "[out:json][timeout:25];("
         
@@ -206,16 +206,19 @@ class Tool(object):
 
         # Get data using urllib
         # The tool makes the user supply at least one key
-        if len(keys) == 1:
+        if len(keys) == 1 and "'* (any value, including the ones listed below)'" not in keys:
+            arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + keys[0])
             nodeData = 'node["' + parameters[0].value + '"="' + keys[0] + '"]'
             wayData = 'way["' + parameters[0].value + '"="' + keys[0] + '"]'
             relationData = 'relation["' + parameters[0].value + '"="' + keys[0] + '"]'
-        else:
+        elif len(keys) > 1 and "'* (any value, including the ones listed below)'" not in keys:
+            arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + "|".join(keys))
             nodeData = 'node["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             wayData = 'way["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             relationData = 'relation["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
         #replace any query if star is selected:
-        if "* (any value, including the ones listed below)" in keys:
+        elif "'* (any value, including the ones listed below)'" in keys:
+            arcpy.AddMessage("\nCollecting " + parameters[0].value + " = * (any value)")
             nodeData = 'node["' + parameters[0].value + '"]'
             wayData = 'way["' + parameters[0].value + '"]'
             relationData = 'relation["' + parameters[0].value + '"]'
