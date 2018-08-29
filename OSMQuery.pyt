@@ -166,9 +166,15 @@ class Tool(object):
         arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + "|".join(keys))
         url = "http://overpass-api.de/api/interpreter"
         start = "[out:json][timeout:25];("
+        
         if parameters[2].value != "geocode region":
             bboxHead = ''
-            bbox = [parameters[4].value.YMin,parameters[4].value.XMin,parameters[4].value.YMax,parameters[4].value.XMax]
+            if parameters[4].value.spatialReference != arcpy.SpatialReference(4326):
+                LL = arcpy.PointGeometry(arcpy.Point(parameters[4].value.XMin,parameters[4].value.YMin), parameters[4].value.spatialReference).projectAs(arcpy.SpatialReference(4326))
+                UR = arcpy.PointGeometry(arcpy.Point(parameters[4].value.XMax,parameters[4].value.YMax), parameters[4].value.spatialReference).projectAs(arcpy.SpatialReference(4326))
+                bbox = [LL.extent.YMin, LL.extent.XMin, UR.extent.YMax, UR.extent.XMax]
+            else:
+                bbox = [parameters[4].value.YMin,parameters[4].value.XMin,parameters[4].value.YMax,parameters[4].value.XMax]
             bboxData = '(' + ','.join(str(e) for e in bbox) + ');'
         else:
             ###getting areaID from Nominatim:
@@ -202,7 +208,7 @@ class Tool(object):
             nodeData = 'node["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             wayData = 'way["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             relationData = 'relation["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
-		#replace any query if star is selected:
+        #replace any query if star is selected:
         if "*" in keys:
             nodeData = 'node["' + parameters[0].value + '"]'
             wayData = 'way["' + parameters[0].value + '"]'
