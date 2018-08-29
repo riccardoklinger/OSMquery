@@ -15,7 +15,7 @@ For defining the spatial extent of your query you can use two options: You can e
 
 After the tool has run successfully, the results will be drawn on the map in up to three feature layers (one each for point features, line features, and polygon features) and the respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`). 
 
-![results in ArcGIS Pro](https://i.imgur.com/voTjY0S.png)
+![results in ArcGIS Pro](https://i.imgur.com/uEyxD2H.png)
 
 ## Restrictions: What might this tool not be able to do?
 This tool relies on the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API). As the size of an Overpass API query result is only known when the download is complete, it is not possible to give an estimate of time-until-completion during the query process. The Overpass API uses a timeout after which a query will not be completed. If you run into timeout problems consider narrowing your query thematically and/or spatially. For other limitations of the Overpass API and potential workarounds please consider the pertinent [OSM Wiki Page](https://wiki.openstreetmap.org/wiki/Overpass_API#Limitations).
