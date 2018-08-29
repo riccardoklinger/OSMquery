@@ -160,8 +160,32 @@ class Tool(object):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
         return
+
+
     def execute(self, parameters, messages):
         """The source code of the tool."""
+
+        def create_result_fc(geometry_type, fields):
+            fc_name = '%ss_%s' % (geometry_type, str(timestamp))
+            fc = join(arcpy.env.scratchWorkspace, fc_name)
+
+            arcpy.AddMessage("\nCreating %s feature layer %s..." % (geometry_type.lower(), fc_name))
+            if geometry_type == 'Line':
+                geometry_type = 'Polyline'
+            arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, fc_name, geometry_type.upper(), "",
+                                                "DISABLED",
+                                                "DISABLED", arcpy.SpatialReference(4326), "")
+            arcpy.AddMessage("\tAdding attribute OSM_ID...")
+            arcpy.AddField_management(fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
+            for field in fields:
+                try:
+                    field = field.replace(":", "")
+                    arcpy.AddMessage("\tAdding attribute %s..." % field)
+                    arcpy.AddField_management(fc, field, "STRING", 255, "", "", field, "NULLABLE")
+                except:
+                    arcpy.AddMessage("\tAdding attribute %s failed.")
+            return fc
+
         keys = parameters[1].value.exportToString().split(";")
         arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + "|".join(keys))
         url = "http://overpass-api.de/api/interpreter"
@@ -269,61 +293,19 @@ class Tool(object):
                 polygon_fc_fields.add(tag)
 
         if len(points) > 0:
-            point_fc_name = "Points_" + str(timestamp)
-            arcpy.AddMessage("\nCreating point feature layer %s..." % point_fc_name)
-            point_fc = join(arcpy.env.scratchWorkspace, point_fc_name)
-            arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, point_fc_name, "POINT", "",
-                                                          "DISABLED", "DISABLED", arcpy.SpatialReference(4326), "")
-            arcpy.AddMessage("\tAdding attribute OSM_ID...")
-            arcpy.AddField_management(point_fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
-            for field in point_fc_fields:
-                try:
-                    field = field.replace(":", "")
-                    arcpy.AddMessage("\tAdding attribute %s..." % field)
-                    arcpy.AddField_management(point_fc, field, "STRING", 255, "", "", field, "NULLABLE")
-                except:
-                    arcpy.AddMessage("\tFailed.")
-
-
+            point_fc = create_result_fc('Point', point_fc_fields)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
         else:
             arcpy.AddMessage("\nData contains no point features.")
 
-
         if len(lines) > 0:
-            line_fc_name = "Lines_" + str(timestamp)
-            arcpy.AddMessage("\nCreating line feature layer %s..." % line_fc_name)
-            line_fc = join(arcpy.env.scratchWorkspace, line_fc_name)
-            arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, line_fc_name, "POLYLINE", "", "DISABLED",
-                                                "DISABLED", arcpy.SpatialReference(4326), "")
-            arcpy.AddMessage("\tAdding attribute OSM_ID...")
-            arcpy.AddField_management(line_fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
-            for field in line_fc_fields:
-                try:
-                    field = field.replace(":", "")
-                    arcpy.AddMessage("\tAdding attribute %s..." % field)
-                    arcpy.AddField_management(line_fc, field, "STRING", 255, "", "", field, "NULLABLE")
-                except:
-                    arcpy.AddMessage("\tFailed.")
+            line_fc = create_result_fc('Line', line_fc_fields)
             line_fc_cursor = arcpy.InsertCursor(line_fc)
         else:
             arcpy.AddMessage("\nData contains no line features.")
             
         if len(polygons) > 0:
-            polygon_fc_name = "Polygons_" + str(timestamp)
-            arcpy.AddMessage("\nCreating polygon feature layer %s..." % polygon_fc_name)
-            polygon_fc = join(arcpy.env.scratchWorkspace, polygon_fc_name)
-            arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, polygon_fc_name, "POLYGON", "", "DISABLED",
-                                                "DISABLED", arcpy.SpatialReference(4326), "")
-            arcpy.AddMessage("\tAdding attribute OSM_ID...")
-            arcpy.AddField_management(polygon_fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
-            for field in polygon_fc_fields:
-                try:
-                    field = field.replace(":", "")
-                    arcpy.AddMessage("\tAdding attribute %s..." % field)
-                    arcpy.AddField_management(polygon_fc, field, "STRING", 255, "", "", field, "NULLABLE")
-                except:
-                    arcpy.AddMessage("\tFailed.")
+            polygon_fc = create_result_fc('Polygon', polygon_fc_fields)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
         else:
             arcpy.AddMessage("\nData contains no polygon features.")
