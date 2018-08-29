@@ -26,6 +26,7 @@ import json
 import time
 from os.path import dirname, join, abspath, isfile
 
+
 class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
@@ -36,12 +37,14 @@ class Toolbox(object):
         # List of tool classes associated with this toolbox
         self.tools = [Tool]
 
+
 class Tool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Get OSM Data"
         self.description = ""
         self.canRunInBackground = False
+
     def getConfig(self, configItem):
         ###load config file
         json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
@@ -58,6 +61,7 @@ class Tool(object):
             for key in config_json[configItem]:
                 array.append(key)
         return array
+
     def getServer(self):
         ###load config file
         json_file_config = join(dirname(abspath(__file__)), 'config/servers.json')
@@ -69,11 +73,12 @@ class Tool(object):
         for server in config_json["overpass_servers"]:
             array.append(server)
         return array
+
     def getParameterInfo(self):
         """Define parameter definitions"""
         ###let's read the config files with Tags and keys###
         param0 = arcpy.Parameter(
-            displayName="Tag",
+            displayName="OSM tag key",
             name="in_tag",
             datatype="GPString",
             parameterType="Required",
@@ -82,7 +87,7 @@ class Tool(object):
         param0.filter.list = self.getConfig('all')
         param0.value = param0.filter.list[0]
         param1 = arcpy.Parameter(
-            displayName="Key",
+            displayName="OSM tag value",
             name="in_key",
             datatype="GPString",
             parameterType="Required",
@@ -90,44 +95,44 @@ class Tool(object):
             multiValue=True
         )
         param2 = arcpy.Parameter(
-            displayName="Spatial Extent",
+            displayName="Spatial extent indication method",
             name="in_regMode",
             datatype="GPString",
             parameterType="Required",
             direction="Input"
         )
-        param2.filter.list = ["geocode region","define simple bounding box"]
-        param2.value = "geocode region"
+        param2.filter.list = ["Geocode a region name","Define a bounding box"]
+        param2.value = "Geocode a region name"
         param3 = arcpy.Parameter(
-            displayName="Region",
+            displayName="Region name",
             name="in_region",
             datatype="GPString",
             parameterType="Optional",
             direction="Input"
         )
         param4 = arcpy.Parameter(
-            displayName="Area Of Interest",
+            displayName="Bounding box",
             name="in_bbox",
             datatype="GPExtent",
             parameterType="Optional",
             direction="Input"
         )
         param_out0 = arcpy.Parameter(
-            displayName="Layer Containing the Points",
+            displayName="Layer containing OSM point data",
             name="out_nodes",
             datatype="GPFeatureLayer",
             parameterType="Derived",
             direction="Output"
         )
         param_out1 = arcpy.Parameter(
-            displayName="Layer Containing the Polylines",
+            displayName="Layer containing OSM line data",
             name="out_ways",
             datatype="GPFeatureLayer",
             parameterType="Derived",
             direction="Output"
         )
         param_out2 = arcpy.Parameter(
-            displayName="Layer Containing the Polygons",
+            displayName="Layer containing OSM polygon data",
             name="out_poly",
             datatype="GPFeatureLayer",
             parameterType="Derived",
@@ -147,7 +152,7 @@ class Tool(object):
         has been changed."""
         #update the parameters of keys accroding the values of "in_tag"
         parameters[1].filter.list = self.getConfig(parameters[0].value)
-        if parameters[2].value == "geocode region":
+        if parameters[2].value == "Geocode a region name":
             parameters[3].enabled = True
             parameters[4].enabled = False
         else:
@@ -160,6 +165,7 @@ class Tool(object):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
         return
+
     def execute(self, parameters, messages):
         """The source code of the tool."""
         keys = parameters[1].value.exportToString().split(";")
@@ -167,7 +173,7 @@ class Tool(object):
         url = "http://overpass-api.de/api/interpreter"
         start = "[out:json][timeout:25];("
         
-        if parameters[2].value != "geocode region":
+        if parameters[2].value != "Geocode a region name":
             bboxHead = ''
             if parameters[4].value.spatialReference != arcpy.SpatialReference(4326):
                 LL = arcpy.PointGeometry(arcpy.Point(parameters[4].value.XMin,parameters[4].value.YMin), parameters[4].value.spatialReference).projectAs(arcpy.SpatialReference(4326))
@@ -180,7 +186,7 @@ class Tool(object):
             ###getting areaID from Nominatim:
             nominatimURL = 'https://nominatim.openstreetmap.org/search?q=' + parameters[3].valueAsText + '&format=json'
             NominatimResponse = requests.get(nominatimURL)
-            arcpy.AddMessage("gecode region using the url " + nominatimURL)
+            arcpy.AddMessage("\nGecoding region using the url %s..." % nominatimURL)
             try:
                 NominatimData = NominatimResponse.json()
 
@@ -188,14 +194,14 @@ class Tool(object):
                     if result["osm_type"] == "relation":
                         areaID = result['osm_id']
                         try:
-                            arcpy.AddMessage("found area " + result['display_name'])
+                            arcpy.AddMessage("\tFound region " + result['display_name'])
                         except:
-                            arcpy.AddMessage("found area " + str(areaID))
+                            arcpy.AddMessage("\tFound region " + str(areaID))
                         break
                 bboxHead = 'area(' + str(int(areaID) + 3600000000) + ')->.searchArea;'
                 bboxData = '(area.searchArea);'
             except:
-                arcpy.AddError("no area found!")
+                arcpy.AddError("\tNo region found!")
                 return
 
         # Get data using urllib
@@ -215,23 +221,23 @@ class Tool(object):
             relationData = 'relation["' + parameters[0].value + '"]'
         end = ');(._;>;);out;>;'
         query = start + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
-        arcpy.AddMessage("Overpass API Query:")
+        arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(url,params={'data': query})
         if response.status_code!=200:
-            arcpy.AddMessage("server response was " + str(response.status_code) )
+            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code) )
             return
         try:
             data = response.json()
         except:
-            arcpy.AddMessage("server responded with non JSON data: ")
+            arcpy.AddMessage("\tOverpass API responded with non JSON data: ")
             arcpy.AddError(response.text)
             return
         if len(data["elements"]) == 0:
-            arcpy.AddMessage("No data found!")
+            arcpy.AddMessage("\tNo data found!")
             return
         else:
-            arcpy.AddMessage("collected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
+            arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
 
@@ -342,7 +348,7 @@ class Tool(object):
                     try:
                         row.setValue(tag.replace(":", ""), element["tags"][tag])
                     except:
-                        arcpy.AddMessage("adding value failed")
+                        arcpy.AddMessage("Adding value failed.")
                 point_fc_cursor.insertRow(row)
                 del row
             if element["type"]=="way" and "tags" in element:
@@ -356,7 +362,6 @@ class Tool(object):
                             nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
                             break
                 if nodes[0]==nodes[len(nodes)-1]:
-                    arcpy.AddMessage("treating way as polygon")
                     row = polygon_fc_cursor.newRow()
                     pointArray = arcpy.Array(nodeGeoemtry)
                     row.setValue("SHAPE", pointArray)
@@ -367,11 +372,10 @@ class Tool(object):
                             try:
                                 row.setValue(tag.replace(":", ""), element["tags"][tag])
                             except:
-                                arcpy.AddMessage("adding value failed")
+                                arcpy.AddMessage("Adding value failed.")
                     polygon_fc_cursor.insertRow(row)
                     del row
                 else: #lines have different start end endnodes:
-                    arcpy.AddMessage("treating way as polyline")
                     row = line_fc_cursor.newRow()
                     pointArray = arcpy.Array(nodeGeoemtry)
                     row.setValue("SHAPE", pointArray)
@@ -382,7 +386,7 @@ class Tool(object):
                             try:
                                 row.setValue(tag.replace(":", ""), element["tags"][tag])
                             except:
-                                arcpy.AddMessage("adding value failed")
+                                arcpy.AddMessage("Adding value failed.")
                     line_fc_cursor.insertRow(row)
                     del row
 
