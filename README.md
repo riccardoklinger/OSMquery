@@ -4,7 +4,7 @@ Query OSM data for defined key-value pairs (tags) and an area of interest and ad
 ## Installation
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
 
-![Toolbox in ArcGIS Pro](https://i.imgur.com/UU2S2QU.png)
+![Toolbox in ArcGIS Pro](https://i.imgur.com/2rXKySa.png)
 
 ## Usage: What does this tool do?
 OSM tags like, for example, `amenity=bakery` consist of a key (in the example: `amenity`) and a value (in the example: `bakery`). In the tool, select a key and value pair for which OSM should be queried for features. In each run of the tool, you can use only one key but you can use one or several values. For example, you can query only for `amenity=atm` or you can query for both `amenity=atm` and `amenity=bank` in one run of the tool. If you chose to do the latter, the results for different tags (or more specifically: OSM values) are summarized into one feature class per geometry type.
