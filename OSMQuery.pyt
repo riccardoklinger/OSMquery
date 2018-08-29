@@ -202,6 +202,11 @@ class Tool(object):
             nodeData = 'node["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             wayData = 'way["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
             relationData = 'relation["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
+		#replace any query if star is selected:
+        if "*" in keys:
+            nodeData = 'node["' + parameters[0].value + '"]'
+            wayData = 'way["' + parameters[0].value + '"]'
+            relationData = 'relation["' + parameters[0].value + '"]'
         end = ');(._;>;);out;>;'
         query = start + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + end
         arcpy.AddMessage("Overpass API Query:")
