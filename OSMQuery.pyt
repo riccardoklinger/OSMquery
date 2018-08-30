@@ -375,20 +375,20 @@ class Tool(object):
             if element["type"]=="way" and "tags" in element:
                 ### getting needed Node Geometries:
                 nodes = element["nodes"]
-                nodeGeoemtry = []
+                nodeGeometry = []
                 ### finding nodes in reverse mode
                 for node in nodes:
                     for NodeElement in data['elements']:
                         if NodeElement["id"] == node:
                             if sr.factoryCode != 4326:
-                                nodeGeoemtry.append(arcpy.PointGeometry(arcpy.Point(NodeElement["lon"],NodeElement["lat"]), arcpy.SpatialReference(4326)).projectAs(sr).firstPoint)
+                                nodeGeometry.append(arcpy.PointGeometry(arcpy.Point(NodeElement["lon"],NodeElement["lat"]), arcpy.SpatialReference(4326)).projectAs(sr).firstPoint)
                             else:
-                                nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
+                                nodeGeometry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
                             break
 
                 if nodes[0]==nodes[len(nodes)-1]:
                     row = polygon_fc_cursor.newRow()
-                    pointArray = arcpy.Array(nodeGeoemtry)
+                    pointArray = arcpy.Array(nodeGeometry)
                     row.setValue("SHAPE", pointArray)
                     row.setValue("OSM_ID", element["id"])
                     ###now deal with the way tags:
@@ -402,7 +402,7 @@ class Tool(object):
                     del row
                 else: #lines have different start end endnodes:
                     row = line_fc_cursor.newRow()
-                    pointArray = arcpy.Array(nodeGeoemtry)
+                    pointArray = arcpy.Array(nodeGeometry)
                     row.setValue("SHAPE", pointArray)
                     row.setValue("OSM_ID", element["id"])
                     ###now deal with the way tags:
@@ -417,11 +417,11 @@ class Tool(object):
 
         if points_created:
             del point_fc_cursor
-            parameters[6].value = point_fc
+            parameters[7].value = point_fc
         if lines_created:
             del line_fc_cursor
-            parameters[7].value = line_fc
+            parameters[8].value = line_fc
         if polygons_created:
             del polygon_fc_cursor
-            parameters[8].value = polygon_fc
+            parameters[9].value = polygon_fc
         return
