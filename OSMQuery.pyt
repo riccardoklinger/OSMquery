@@ -122,7 +122,8 @@ class Tool(object):
             displayName="Output CRS",
             name="in_crs",
             datatype="GPCoordinateSystem",
-            parameterType="Required",
+            parameterType="Optional",
+            category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
             direction="Input"
         )
         param5.value = arcpy.SpatialReference(4326)
@@ -131,6 +132,7 @@ class Tool(object):
             name="in_transformation",
             datatype="GPString",
             parameterType="Optional",
+            category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
             direction="Input",
             enabled=False
         )
@@ -196,10 +198,14 @@ class Tool(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-        sr = arcpy.SpatialReference()
-        sr.loadFromString(parameters[5].value)
-        transformation = parameters[6].value
-        arcpy.env.geographicTransformations = transformation
+        if parameters[5].value is not None:
+            sr = arcpy.SpatialReference()
+            sr.loadFromString(parameters[5].value)
+        else:
+            sr = arcpy.SpatialReference(4326)
+        if parameters[6].value is not None:
+            transformation = parameters[6].value
+            arcpy.env.geographicTransformations = transformation
 
         # Constants for building the query to the Overpass API
         QUERY_URL = "http://overpass-api.de/api/interpreter"
