@@ -115,7 +115,8 @@ class Tool(object):
             name="in_bbox",
             datatype="GPExtent",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            enabled=False
         )
         param5 = arcpy.Parameter(
             displayName="Output CRS",
@@ -125,6 +126,14 @@ class Tool(object):
             direction="Input"
         )
         param5.value = arcpy.SpatialReference(4326)
+        param6 = arcpy.Parameter(
+            displayName="Transformation",
+            name="in_transformation",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input",
+            enabled=False
+        )
         param_out0 = arcpy.Parameter(
             displayName="Layer containing OSM point data",
             name="out_nodes",
@@ -146,7 +155,7 @@ class Tool(object):
             parameterType="Derived",
             direction="Output"
         )
-        params = [param0, param1, param2, param3, param4, param5, param_out0, param_out1, param_out2]
+        params = [param0, param1, param2, param3, param4, param5, param6, param_out0, param_out1, param_out2]
 
         return params
 
@@ -166,7 +175,18 @@ class Tool(object):
         else:
             parameters[3].enabled = False
             parameters[4].enabled = True
-        #parameters[1].value = parameters[1].filter.list[0]
+
+        if parameters[5].value is not None:
+            target_sr = arcpy.SpatialReference()
+            sr_string = str(parameters[5].value)
+            target_sr.loadFromString(sr_string)
+            # If necessary, find candidate transformations between EPSG:4326 and <target_sr>
+            if target_sr.factoryCode != 4326:
+                parameters[6].enabled = True
+                parameters[6].filter.list = arcpy.ListTransformations(arcpy.SpatialReference(4326), target_sr)
+                parameters[6].value = parameters[6].filter.list[0]
+            if target_sr.factoryCode == 4326:
+                parameters[6].enabled = False
         return
 
     def updateMessages(self, parameters):
@@ -178,7 +198,9 @@ class Tool(object):
         """The source code of the tool."""
         sr = arcpy.SpatialReference()
         sr.loadFromString(parameters[5].value)
-        arcpy.AddMessage(sr.factoryCode)
+        transformation = parameters[6].value
+        arcpy.env.geographicTransformations = transformation
+
         # Constants for building the query to the Overpass API
         QUERY_URL = "http://overpass-api.de/api/interpreter"
         QUERY_START = "[out:json][timeout:25];("
@@ -188,7 +210,8 @@ class Tool(object):
             fc_name = '%ss_%s' % (geometry_type, str(timestamp))
             fc = join(arcpy.env.scratchWorkspace, fc_name)
 
-            arcpy.AddMessage("\nCreating %s feature layer %s..." % (geometry_type.lower(), fc_name))
+            arcpy.AddMessage("\nCreating %s feature layer %s in EPSG:%s..." % (geometry_type.lower(), fc_name,
+                                                                               sr.factoryCode))
             if geometry_type == 'Line':
                 geometry_type = 'Polyline'
             arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, fc_name, geometry_type.upper(), "",
