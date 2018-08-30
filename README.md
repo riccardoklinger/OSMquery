@@ -11,7 +11,7 @@ OSM tags like, for example, `amenity=bakery` consist of a key (in the example: `
 
 The tool will add all tags that occur in the features found in OSM as attributes (fields) and their values. The OSM tag keys become attribute names, the OSM tag values become attribute values.
 
-For defining the spatial extent of your query you can use two options: You can either enter an area name (which will be geocoded using the OSM-based geocoding service [Nominatim](https://nominatim.openstreetmap.org/search)) or you can define a bounding box using coordinates in the [EPSG 4326](https://epsg.io/4326) (also known as WGS 1984) spatial reference system. If you take the latter route you can e.g. use the option *Same as Display*, but in this case make sure that your data frame is in [EPSG 4326](https://epsg.io/4326) before opening the tool.
+For defining the spatial extent of your query you can use two options: You can either enter an area name (which will be geocoded using the OSM-based geocoding service [Nominatim](https://nominatim.openstreetmap.org/search)) or you can define a bounding box using coordinates. If you take the latter route you can e.g. use the option *Same as Display*.
 
 After the tool has run successfully, the results will be drawn on the map in up to three feature layers (one each for point features, line features, and polygon features) and the respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`). 
 
