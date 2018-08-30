@@ -102,7 +102,7 @@ class Tool(object):
             direction="Input"
         )
         param2.filter.list = ["Geocode a region name","Define a bounding box"]
-        param2.value = "Geocode a region name"
+        param2.value = "Define a bounding box"
         param3 = arcpy.Parameter(
             displayName="Region name",
             name="in_region",
@@ -196,7 +196,7 @@ class Tool(object):
             return fc
 
         keys = parameters[1].value.exportToString().split(";")
-        
+
         if parameters[2].value != "Geocode a region name":
             bboxHead = ''
             if parameters[4].value.spatialReference != arcpy.SpatialReference(4326):
@@ -312,7 +312,7 @@ class Tool(object):
             line_fc_cursor = arcpy.InsertCursor(line_fc)
         else:
             arcpy.AddMessage("\nData contains no line features.")
-            
+
         if len(polygons) > 0:
             polygon_fc = create_result_fc('Polygon', polygon_fc_fields)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
