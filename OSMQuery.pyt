@@ -117,6 +117,14 @@ class Tool(object):
             parameterType="Optional",
             direction="Input"
         )
+        param5 = arcpy.Parameter(
+            displayName="Output CRS",
+            name="in_crs",
+            datatype="GPCoordinateSystem",
+            parameterType="Required",
+            direction="Input"
+        )
+        param5.value = arcpy.SpatialReference(4326)
         param_out0 = arcpy.Parameter(
             displayName="Layer containing OSM point data",
             name="out_nodes",
@@ -138,7 +146,7 @@ class Tool(object):
             parameterType="Derived",
             direction="Output"
         )
-        params = [param0, param1, param2, param3, param4, param_out0, param_out1, param_out2]
+        params = [param0, param1, param2, param3, param4, param5, param_out0, param_out1, param_out2]
 
         return params
 
@@ -168,7 +176,9 @@ class Tool(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-
+        sr = arcpy.SpatialReference()
+        sr.loadFromString(parameters[5].value)
+        arcpy.AddMessage(sr.factoryCode)
         # Constants for building the query to the Overpass API
         QUERY_URL = "http://overpass-api.de/api/interpreter"
         QUERY_START = "[out:json][timeout:25];("
@@ -183,7 +193,7 @@ class Tool(object):
                 geometry_type = 'Polyline'
             arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, fc_name, geometry_type.upper(), "",
                                                 "DISABLED",
-                                                "DISABLED", arcpy.SpatialReference(4326), "")
+                                                "DISABLED", sr, "")
             arcpy.AddMessage("\tAdding attribute OSM_ID...")
             arcpy.AddField_management(fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
             for field in fields:
@@ -326,7 +336,10 @@ class Tool(object):
             ###we deal with nodes first
             if element["type"]=="node" and "tags" in element:
                 row = point_fc_cursor.newRow()
-                PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
+                if sr.factoryCode != 4326:
+                    PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326)).projectAs(sr)
+                else:
+                    PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
                 row.setValue("SHAPE", PtGeometry)
                 row.setValue("OSM_ID", element["id"])
                 for tag in element["tags"]:
@@ -344,8 +357,12 @@ class Tool(object):
                 for node in nodes:
                     for NodeElement in data['elements']:
                         if NodeElement["id"] == node:
-                            nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
+                            if sr.factoryCode != 4326:
+                                nodeGeoemtry.append(arcpy.PointGeometry(arcpy.Point(NodeElement["lon"],NodeElement["lat"]), arcpy.SpatialReference(4326)).projectAs(sr).firstPoint)
+                            else:
+                                nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
                             break
+
                 if nodes[0]==nodes[len(nodes)-1]:
                     row = polygon_fc_cursor.newRow()
                     pointArray = arcpy.Array(nodeGeoemtry)
@@ -377,11 +394,11 @@ class Tool(object):
 
         if points_created:
             del point_fc_cursor
-            parameters[5].value = point_fc
+            parameters[6].value = point_fc
         if lines_created:
             del line_fc_cursor
-            parameters[6].value = line_fc
+            parameters[7].value = line_fc
         if polygons_created:
             del polygon_fc_cursor
-            parameters[7].value = polygon_fc
+            parameters[8].value = polygon_fc
         return

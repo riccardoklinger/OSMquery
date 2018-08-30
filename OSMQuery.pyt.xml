@@ -1,11 +1,12 @@
+<?xml version="1.0"?>
 <metadata xml:lang="de">
 	<Esri>
 		<CreaDate>20180822</CreaDate>
 		<CreaTime>14513500</CreaTime>
 		<ArcGISFormat>1.0</ArcGISFormat>
 		<SyncOnce>TRUE</SyncOnce>
-		<ModDate>20180829</ModDate>
-		<ModTime>182159</ModTime>
+		<ModDate>20180830</ModDate>
+		<ModTime>134623</ModTime>
 		<scaleRange>
 			<minScale>150000000</minScale>
 			<maxScale>5000</maxScale>
@@ -13,7 +14,7 @@
 		<ArcGISProfile>ItemDescription</ArcGISProfile>
 	</Esri>
 	<toolbox name="OSMQuery" alias="OSM Query Toolbox">
-		<arcToolboxHelpPath>c:\program files (x86)\arcgis\desktop10.5\Help\gp</arcToolboxHelpPath>
+		<arcToolboxHelpPath>c:\program files\arcgis\pro\Resources\Help\gp</arcToolboxHelpPath>
 		<toolsets/>
 	</toolbox>
 	<dataIdInfo>
