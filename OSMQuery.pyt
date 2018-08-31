@@ -24,6 +24,7 @@ import arcpy
 import requests
 import json
 import time
+import datetime
 from os.path import dirname, join, abspath, isfile
 
 
@@ -247,6 +248,7 @@ class Tool(object):
             parameterType="Optional",
             direction="Input"
         )
+
         param4 = arcpy.Parameter(
             displayName="Bounding box",
             name="in_bbox",
@@ -273,6 +275,15 @@ class Tool(object):
             direction="Input",
             enabled=False
         )
+        param7 = arcpy.Parameter(
+            displayName="Reference date/time UTC",
+            name="in_date",
+            datatype="GPDate",
+            parameterType="Optional",
+            direction="Input",
+        )
+        now = datetime.datetime.utcnow()
+        param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
         param_out0 = arcpy.Parameter(
             displayName="Layer containing OSM point data",
             name="out_nodes",
@@ -294,7 +305,7 @@ class Tool(object):
             parameterType="Derived",
             direction="Output"
         )
-        params = [param0, param1, param2, param3, param4, param5, param6, param_out0, param_out1, param_out2]
+        params = [param0, param1, param2, param3, param4, param5, param6, param7, param_out0, param_out1, param_out2]
 
         return params
 
@@ -331,9 +342,13 @@ class Tool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        # if only time is selected, year will be autofilled with "1899"
+        if parameters[7].value.year < 2004:
+            parameters[7].setWarningMessage("No or invalid date provided! Date must be greater than 9th of August 2004!")
         return
 
     def execute(self, parameters, messages):
+
         """The source code of the tool."""
         if parameters[5].value is not None:
             sr = arcpy.SpatialReference()
@@ -346,7 +361,8 @@ class Tool(object):
 
         # Constants for building the query to the Overpass API
         QUERY_URL = "http://overpass-api.de/api/interpreter"
-        QUERY_START = "[out:json][timeout:25];("
+        QUERY_START = "[out:json][timeout:25]"
+        QUERY_DATE = '[date:"' + parameters[7].value.strftime("%Y-%m-%dT%H:%M:%SZ") + '"];('
         QUERY_END = ');(._;>;);out;>;'
 
         keys = parameters[1].value.exportToString().split(";")
@@ -401,7 +417,7 @@ class Tool(object):
             wayData = 'way["' + parameters[0].value + '"]'
             relationData = 'relation["' + parameters[0].value + '"]'
 
-        query = QUERY_START + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + QUERY_END
+        query = QUERY_START + QUERY_DATE + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + QUERY_END
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
@@ -425,11 +441,11 @@ class Tool(object):
         FCs = Toolbox.fillFC(data)
 
         if FCs[0]:
-            parameters[5].value = FCs[0]
+            parameters[6].value = FCs[0]
         if FCs[1]:
-            parameters[6].value = FCs[1]
+            parameters[7].value = FCs[1]
         if FCs[2]:
-            parameters[7].value = FCs[2]
+            parameters[8].value = FCs[2]
         return
 class OverpassTool(object):
     def __init__(self):
