@@ -13,7 +13,9 @@ The tool will add all tags that occur in the features found in OSM as attributes
 
 For defining the spatial extent of your query you can use two options: You can either enter an area name (which will be geocoded using the OSM-based geocoding service [Nominatim](https://nominatim.openstreetmap.org/search)) or you can define a bounding box using coordinates. If you take the latter route you can e.g. use the option *Same as Display*.
 
-After the tool has run successfully, the results will be drawn on the map in up to three feature layers (one each for point features, line features, and polygon features) and the respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`). 
+By altering the *reference date* you will only get results form the OpenStreetMap dataset which was entered prior the given date/time stamp. Please use at least a date. Date and time is given in UTC. 
+
+After the tool has run successfully, the results will be drawn on the map in up to three feature layers (one each for point features, line features, and polygon features) and the respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`).
 
 ![results in ArcGIS Pro](https://i.imgur.com/uEyxD2H.png)
 
