@@ -23,5 +23,7 @@ After the tool has run successfully, the results will be drawn on the map in up 
 This tool relies on the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API). As the size of an Overpass API query result is only known when the download is complete, it is not possible to give an estimate of time-until-completion during the query process. The Overpass API uses a timeout after which a query will not be completed. If you run into timeout problems consider narrowing your query thematically and/or spatially. For other limitations of the Overpass API and potential workarounds please consider the pertinent [OSM Wiki Page](https://wiki.openstreetmap.org/wiki/Overpass_API#Limitations).
 
 
-## Credits
+## Credits and contributors
 This tool relies on the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) which is licensed under the [GNU Affero GPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html). All OSM data you obtain through this tool are, of course, [&copy; OSM contributors](https://www.openstreetmap.org/copyright).
+
+The idea for OSMquery was conceived and first implementations were done by [Riccardo Klinger](https://github.com/riccardoklinger) of [Esri Germany](https://www.esri.de), further contributions by [Ralph Straumann](https://github.com/rastrau) of [EBP](https://www.ebp.ch/en) and [michaelmgis](https://github.com/michaelmgis). Help us improve OSMquery by [testing, filing bug reports, feature requests or ideas](https://github.com/riccardoklinger/OSMquery/issues). Thank you!
