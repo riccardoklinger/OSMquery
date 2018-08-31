@@ -35,8 +35,145 @@ class Toolbox(object):
         self.alias = "OSM Query Toolbox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [Tool]
+        self.tools = [Tool, OverpassTool]
+    def create_result_fc(geometry_type, fields, timestamp):
+        fc_name = '%ss_%s' % (geometry_type, str(timestamp))
+        fc = join(arcpy.env.scratchWorkspace, fc_name)
 
+        arcpy.AddMessage("\nCreating %s feature layer %s..." % (geometry_type.lower(), fc_name))
+        if geometry_type == 'Line':
+            geometry_type = 'Polyline'
+        arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, fc_name, geometry_type.upper(), "",
+                                            "DISABLED",
+                                            "DISABLED", arcpy.SpatialReference(4326), "")
+        arcpy.AddMessage("\tAdding attribute OSM_ID...")
+        arcpy.AddField_management(fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
+        for field in fields:
+            try:
+                field = field.replace(":", "")
+                arcpy.AddMessage("\tAdding attribute %s..." % field)
+                arcpy.AddField_management(fc, field, "STRING", 255, "", "", field, "NULLABLE")
+            except:
+                arcpy.AddMessage("\tAdding attribute %s failed.")
+        return fc
+    def fillFC(data):
+        returnArray = [None,None,None]
+        timestamp =  int(time.time())
+        ########################################################
+        ###creating feature classes according to the response###
+        ########################################################
+
+        points = [element for element in data['elements'] if element["type"] == "node"]
+        lines = [element for element in data['elements'] if element["type"] == "way" and
+                 (element["nodes"][0] != element["nodes"][len(element["nodes"])-1])]
+        polygons = [element for element in data['elements'] if element["type"] == "way" and
+                    (element["nodes"][0] == element["nodes"][len(element["nodes"])-1])]
+
+        points_created = True if len(points) > 0 else False
+        lines_created = True if len(lines) > 0 else False
+        polygons_created = True if len(polygons) > 0 else False
+
+        # Iterate through elements per geometry type (points (nodes), lines (open ways; i.e. start and end node are not
+        # identical), polygons (closed ways) and collect attributes
+        point_fc_fields = set()
+        line_fc_fields = set()
+        polygon_fc_fields = set()
+
+        for element in [e for e in points if "tags" in e]:
+            for tag in element["tags"]:
+                point_fc_fields.add(tag)
+
+        for element in [e for e in lines if "tags" in e]:
+            for tag in element["tags"]:
+                line_fc_fields.add(tag)
+
+        for element in [e for e in polygons if "tags" in e]:
+            for tag in element["tags"]:
+                polygon_fc_fields.add(tag)
+
+        if len(points) > 0:
+            point_fc = Toolbox.create_result_fc('Point', point_fc_fields, timestamp)
+            point_fc_cursor = arcpy.InsertCursor(point_fc)
+            returnArray[0]=point_fc
+        else:
+            arcpy.AddMessage("\nData contains no point features.")
+
+        if len(lines) > 0:
+            line_fc = Toolbox.create_result_fc('Line', line_fc_fields, timestamp)
+            line_fc_cursor = arcpy.InsertCursor(line_fc)
+            returnArray[1]=line_fc
+        else:
+            arcpy.AddMessage("\nData contains no line features.")
+
+        if len(polygons) > 0:
+            polygon_fc = Toolbox.create_result_fc('Polygon', polygon_fc_fields, timestamp)
+            polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
+            returnArray[2]=polygon_fc
+        else:
+            arcpy.AddMessage("\nData contains no polygon features.")
+
+        #######################################################
+        ###filling feature classes according to the response###
+        #######################################################
+        for element in data['elements']:
+            ###we deal with nodes first
+            if element["type"]=="node" and "tags" in element:
+                row = point_fc_cursor.newRow()
+                PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
+                row.setValue("SHAPE", PtGeometry)
+                row.setValue("OSM_ID", element["id"])
+                for tag in element["tags"]:
+                    try:
+                        row.setValue(tag.replace(":", ""), element["tags"][tag])
+                    except:
+                        arcpy.AddMessage("Adding value failed.")
+                point_fc_cursor.insertRow(row)
+                del row
+            if element["type"]=="way" and "tags" in element:
+                ### getting needed Node Geometries:
+                nodes = element["nodes"]
+                nodeGeoemtry = []
+                ### finding nodes in reverse mode
+                for node in nodes:
+                    for NodeElement in data['elements']:
+                        if NodeElement["id"] == node:
+                            nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
+                            break
+                if nodes[0]==nodes[len(nodes)-1]:
+                    row = polygon_fc_cursor.newRow()
+                    pointArray = arcpy.Array(nodeGeoemtry)
+                    row.setValue("SHAPE", pointArray)
+                    row.setValue("OSM_ID", element["id"])
+                    ###now deal with the way tags:
+                    if "tags" in element:
+                        for tag in element["tags"]:
+                            try:
+                                row.setValue(tag.replace(":", ""), element["tags"][tag])
+                            except:
+                                arcpy.AddMessage("Adding value failed.")
+                    polygon_fc_cursor.insertRow(row)
+                    del row
+                else: #lines have different start end endnodes:
+                    row = line_fc_cursor.newRow()
+                    pointArray = arcpy.Array(nodeGeoemtry)
+                    row.setValue("SHAPE", pointArray)
+                    row.setValue("OSM_ID", element["id"])
+                    ###now deal with the way tags:
+                    if "tags" in element:
+                        for tag in element["tags"]:
+                            try:
+                                row.setValue(tag.replace(":", ""), element["tags"][tag])
+                            except:
+                                arcpy.AddMessage("Adding value failed.")
+                    line_fc_cursor.insertRow(row)
+                    del row
+        if returnArray[0]:
+            del point_fc_cursor
+        if returnArray[1]:
+            del line_fc_cursor
+        if returnArray[2]:
+            del polygon_fc_cursor
+        return returnArray
 
 class Tool(object):
     def __init__(self):
@@ -174,27 +311,6 @@ class Tool(object):
         QUERY_START = "[out:json][timeout:25];("
         QUERY_END = ');(._;>;);out;>;'
 
-        def create_result_fc(geometry_type, fields):
-            fc_name = '%ss_%s' % (geometry_type, str(timestamp))
-            fc = join(arcpy.env.scratchWorkspace, fc_name)
-
-            arcpy.AddMessage("\nCreating %s feature layer %s..." % (geometry_type.lower(), fc_name))
-            if geometry_type == 'Line':
-                geometry_type = 'Polyline'
-            arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, fc_name, geometry_type.upper(), "",
-                                                "DISABLED",
-                                                "DISABLED", arcpy.SpatialReference(4326), "")
-            arcpy.AddMessage("\tAdding attribute OSM_ID...")
-            arcpy.AddField_management(fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
-            for field in fields:
-                try:
-                    field = field.replace(":", "")
-                    arcpy.AddMessage("\tAdding attribute %s..." % field)
-                    arcpy.AddField_management(fc, field, "STRING", 255, "", "", field, "NULLABLE")
-                except:
-                    arcpy.AddMessage("\tAdding attribute %s failed.")
-            return fc
-
         keys = parameters[1].value.exportToString().split(";")
 
         if parameters[2].value != "Geocode a region name":
@@ -268,120 +384,103 @@ class Tool(object):
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
 
-        timestamp =  int(time.time())
-        ########################################################
-        ###creating feature classes according to the response###
-        ########################################################
+        FCs = Toolbox.fillFC(data)
 
-        points = [element for element in data['elements'] if element["type"] == "node"]
-        lines = [element for element in data['elements'] if element["type"] == "way" and
-                 (element["nodes"][0] != element["nodes"][len(element["nodes"])-1])]
-        polygons = [element for element in data['elements'] if element["type"] == "way" and
-                    (element["nodes"][0] == element["nodes"][len(element["nodes"])-1])]
+        if FCs[0]:
+            parameters[5].value = FCs[0]
+        if FCs[1]:
+            parameters[6].value = FCs[1]
+        if FCs[2]:
+            parameters[7].value = FCs[2]
+        return
+class OverpassTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Custom Overpass Query"
+        self.description = ""
+        self.canRunInBackground = False
 
-        points_created = True if len(points) > 0 else False
-        lines_created = True if len(lines) > 0 else False
-        polygons_created = True if len(polygons) > 0 else False
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        ###let's read the config files with Tags and keys###
+        param0 = arcpy.Parameter(
+            displayName="Overpass Query",
+            name="in_query",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input"
+        )
+        param0.value = '[out:json][timeout:25];node["man_made"="water_well"]out;>;'
+        param_out0 = arcpy.Parameter(
+            displayName="Layer containing OSM point data",
+            name="out_nodes",
+            datatype="GPFeatureLayer",
+            parameterType="Derived",
+            direction="Output"
+        )
+        param_out1 = arcpy.Parameter(
+            displayName="Layer containing OSM line data",
+            name="out_ways",
+            datatype="GPFeatureLayer",
+            parameterType="Derived",
+            direction="Output"
+        )
+        param_out2 = arcpy.Parameter(
+            displayName="Layer containing OSM polygon data",
+            name="out_poly",
+            datatype="GPFeatureLayer",
+            parameterType="Derived",
+            direction="Output"
+        )
+        params = [param0, param_out0, param_out1, param_out2]
 
-        # Iterate through elements per geometry type (points (nodes), lines (open ways; i.e. start and end node are not
-        # identical), polygons (closed ways) and collect attributes
-        point_fc_fields = set()
-        line_fc_fields = set()
-        polygon_fc_fields = set()
+        return params
 
-        for element in [e for e in points if "tags" in e]:
-            for tag in element["tags"]:
-                point_fc_fields.add(tag)
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
 
-        for element in [e for e in lines if "tags" in e]:
-            for tag in element["tags"]:
-                line_fc_fields.add(tag)
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
 
-        for element in [e for e in polygons if "tags" in e]:
-            for tag in element["tags"]:
-                polygon_fc_fields.add(tag)
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
 
-        if len(points) > 0:
-            point_fc = create_result_fc('Point', point_fc_fields)
-            point_fc_cursor = arcpy.InsertCursor(point_fc)
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        # Get data using urllib
+        QUERY_URL = "http://overpass-api.de/api/interpreter"
+        query = parameters[0].valueAsText
+        arcpy.AddMessage("Issuing Overpass API query:")
+        arcpy.AddMessage(query)
+        response = requests.get(QUERY_URL, params={'data': query})
+        if response.status_code!=200:
+            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code) )
+            return
+        try:
+            data = response.json()
+        except:
+            arcpy.AddMessage("\tOverpass API responded with non JSON data: ")
+            arcpy.AddError(response.text)
+            return
+        if len(data["elements"]) == 0:
+            arcpy.AddMessage("\tNo data found!")
+            return
         else:
-            arcpy.AddMessage("\nData contains no point features.")
+            arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
+        arcpy.env.overwriteOutput = True
+        arcpy.env.addOutputsToMap = True
+        FCs = Toolbox.fillFC(data)
 
-        if len(lines) > 0:
-            line_fc = create_result_fc('Line', line_fc_fields)
-            line_fc_cursor = arcpy.InsertCursor(line_fc)
-        else:
-            arcpy.AddMessage("\nData contains no line features.")
-
-        if len(polygons) > 0:
-            polygon_fc = create_result_fc('Polygon', polygon_fc_fields)
-            polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
-        else:
-            arcpy.AddMessage("\nData contains no polygon features.")
-
-        #######################################################
-        ###filling feature classes according to the response###
-        #######################################################
-        for element in data['elements']:
-            ###we deal with nodes first
-            if element["type"]=="node" and "tags" in element:
-                row = point_fc_cursor.newRow()
-                PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
-                row.setValue("SHAPE", PtGeometry)
-                row.setValue("OSM_ID", element["id"])
-                for tag in element["tags"]:
-                    try:
-                        row.setValue(tag.replace(":", ""), element["tags"][tag])
-                    except:
-                        arcpy.AddMessage("Adding value failed.")
-                point_fc_cursor.insertRow(row)
-                del row
-            if element["type"]=="way" and "tags" in element:
-                ### getting needed Node Geometries:
-                nodes = element["nodes"]
-                nodeGeoemtry = []
-                ### finding nodes in reverse mode
-                for node in nodes:
-                    for NodeElement in data['elements']:
-                        if NodeElement["id"] == node:
-                            nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
-                            break
-                if nodes[0]==nodes[len(nodes)-1]:
-                    row = polygon_fc_cursor.newRow()
-                    pointArray = arcpy.Array(nodeGeoemtry)
-                    row.setValue("SHAPE", pointArray)
-                    row.setValue("OSM_ID", element["id"])
-                    ###now deal with the way tags:
-                    if "tags" in element:
-                        for tag in element["tags"]:
-                            try:
-                                row.setValue(tag.replace(":", ""), element["tags"][tag])
-                            except:
-                                arcpy.AddMessage("Adding value failed.")
-                    polygon_fc_cursor.insertRow(row)
-                    del row
-                else: #lines have different start end endnodes:
-                    row = line_fc_cursor.newRow()
-                    pointArray = arcpy.Array(nodeGeoemtry)
-                    row.setValue("SHAPE", pointArray)
-                    row.setValue("OSM_ID", element["id"])
-                    ###now deal with the way tags:
-                    if "tags" in element:
-                        for tag in element["tags"]:
-                            try:
-                                row.setValue(tag.replace(":", ""), element["tags"][tag])
-                            except:
-                                arcpy.AddMessage("Adding value failed.")
-                    line_fc_cursor.insertRow(row)
-                    del row
-
-        if points_created:
-            del point_fc_cursor
-            parameters[5].value = point_fc
-        if lines_created:
-            del line_fc_cursor
-            parameters[6].value = line_fc
-        if polygons_created:
-            del polygon_fc_cursor
-            parameters[7].value = polygon_fc
+        if FCs[0]:
+            parameters[1].value = FCs[0]
+        if FCs[1]:
+            parameters[2].value = FCs[1]
+        if FCs[2]:
+            parameters[3].value = FCs[2]
         return
