@@ -37,7 +37,8 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [Tool, OverpassTool]
-    def create_result_fc(geometry_type, fields, timestamp):
+    @classmethod
+    def create_result_fc(self,geometry_type, fields, timestamp):
         fc_name = '%ss_%s' % (geometry_type, str(timestamp))
         fc = join(arcpy.env.scratchWorkspace, fc_name)
 
@@ -57,7 +58,8 @@ class Toolbox(object):
             except:
                 arcpy.AddMessage("\tAdding attribute %s failed.")
         return fc
-    def fillFC(data):
+    @classmethod
+    def fillFC(self,data):
         returnArray = [None,None,None]
         timestamp =  int(time.time())
         ########################################################
@@ -93,21 +95,21 @@ class Toolbox(object):
                 polygon_fc_fields.add(tag)
 
         if len(points) > 0:
-            point_fc = Toolbox.create_result_fc('Point', point_fc_fields, timestamp)
+            point_fc = self.create_result_fc('Point', point_fc_fields, timestamp)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
             returnArray[0]=point_fc
         else:
             arcpy.AddMessage("\nData contains no point features.")
 
         if len(lines) > 0:
-            line_fc = Toolbox.create_result_fc('Line', line_fc_fields, timestamp)
+            line_fc = self.create_result_fc('Line', line_fc_fields, timestamp)
             line_fc_cursor = arcpy.InsertCursor(line_fc)
             returnArray[1]=line_fc
         else:
             arcpy.AddMessage("\nData contains no line features.")
 
         if len(polygons) > 0:
-            polygon_fc = Toolbox.create_result_fc('Polygon', polygon_fc_fields, timestamp)
+            polygon_fc = self.create_result_fc('Polygon', polygon_fc_fields, timestamp)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
             returnArray[2]=polygon_fc
         else:
@@ -348,7 +350,6 @@ class Tool(object):
         return
 
     def execute(self, parameters, messages):
-
         """The source code of the tool."""
         if parameters[5].value is not None:
             sr = arcpy.SpatialReference()
@@ -439,13 +440,13 @@ class Tool(object):
         arcpy.env.addOutputsToMap = True
 
         FCs = Toolbox.fillFC(data)
-
+        arcpy.AddMessage(FCs)
         if FCs[0]:
-            parameters[6].value = FCs[0]
+            parameters[8].value = FCs[0]
         if FCs[1]:
-            parameters[7].value = FCs[1]
+            parameters[9].value = FCs[1]
         if FCs[2]:
-            parameters[8].value = FCs[2]
+            parameters[10].value = FCs[2]
         return
 class OverpassTool(object):
     def __init__(self):
