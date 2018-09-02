@@ -33,7 +33,7 @@ class Toolbox(object):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
         self.label = "OSM Query Toolbox"
-        self.alias = "OSM Query Toolbox"
+        self.alias = "OSMQueryToolbox"
 
         # List of tool classes associated with this toolbox
         self.tools = [Tool, OverpassTool]
@@ -50,6 +50,8 @@ class Toolbox(object):
                                             "DISABLED", arcpy.SpatialReference(4326), "")
         arcpy.AddMessage("\tAdding attribute OSM_ID...")
         arcpy.AddField_management(fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
+        arcpy.AddMessage("\tAdding attribute DATETIME...")
+        arcpy.AddField_management(fc, "DATETIME", "DATE", "", "", "", "DateTime")
         for field in fields:
             try:
                 field = field.replace(":", "")
@@ -59,7 +61,7 @@ class Toolbox(object):
                 arcpy.AddMessage("\tAdding attribute %s failed.")
         return fc
     @classmethod
-    def fillFC(self,data):
+    def fillFC(self,data, requesttime):
         returnArray = [None,None,None]
         timestamp =  int(time.time())
         ########################################################
@@ -120,56 +122,62 @@ class Toolbox(object):
         #######################################################
         for element in data['elements']:
             ###we deal with nodes first
-            if element["type"]=="node" and "tags" in element:
-                row = point_fc_cursor.newRow()
-                PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
-                row.setValue("SHAPE", PtGeometry)
-                row.setValue("OSM_ID", element["id"])
-                for tag in element["tags"]:
-                    try:
-                        row.setValue(tag.replace(":", ""), element["tags"][tag])
-                    except:
-                        arcpy.AddMessage("Adding value failed.")
-                point_fc_cursor.insertRow(row)
-                del row
-            if element["type"]=="way" and "tags" in element:
-                ### getting needed Node Geometries:
-                nodes = element["nodes"]
-                nodeGeoemtry = []
-                ### finding nodes in reverse mode
-                for node in nodes:
-                    for NodeElement in data['elements']:
-                        if NodeElement["id"] == node:
-                            nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
-                            break
-                if nodes[0]==nodes[len(nodes)-1]:
-                    row = polygon_fc_cursor.newRow()
-                    pointArray = arcpy.Array(nodeGeoemtry)
-                    row.setValue("SHAPE", pointArray)
+            try:
+                if element["type"]=="node" and "tags" in element:
+                    row = point_fc_cursor.newRow()
+                    PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
+                    row.setValue("SHAPE", PtGeometry)
                     row.setValue("OSM_ID", element["id"])
-                    ###now deal with the way tags:
-                    if "tags" in element:
-                        for tag in element["tags"]:
-                            try:
-                                row.setValue(tag.replace(":", ""), element["tags"][tag])
-                            except:
-                                arcpy.AddMessage("Adding value failed.")
-                    polygon_fc_cursor.insertRow(row)
+                    row.setValue("DATETIME", requesttime)
+                    for tag in element["tags"]:
+                        try:
+                            row.setValue(tag.replace(":", ""), element["tags"][tag])
+                        except:
+                            arcpy.AddMessage("Adding value failed.")
+                    point_fc_cursor.insertRow(row)
                     del row
-                else: #lines have different start end endnodes:
-                    row = line_fc_cursor.newRow()
-                    pointArray = arcpy.Array(nodeGeoemtry)
-                    row.setValue("SHAPE", pointArray)
-                    row.setValue("OSM_ID", element["id"])
-                    ###now deal with the way tags:
-                    if "tags" in element:
-                        for tag in element["tags"]:
-                            try:
-                                row.setValue(tag.replace(":", ""), element["tags"][tag])
-                            except:
-                                arcpy.AddMessage("Adding value failed.")
-                    line_fc_cursor.insertRow(row)
-                    del row
+                if element["type"]=="way" and "tags" in element:
+                    ### getting needed Node Geometries:
+                    nodes = element["nodes"]
+                    nodeGeoemtry = []
+                    ### finding nodes in reverse mode
+                    for node in nodes:
+                        for NodeElement in data['elements']:
+                            if NodeElement["id"] == node:
+                                nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
+                                break
+                    if nodes[0]==nodes[len(nodes)-1]:
+                        row = polygon_fc_cursor.newRow()
+                        pointArray = arcpy.Array(nodeGeoemtry)
+                        row.setValue("SHAPE", pointArray)
+                        row.setValue("OSM_ID", element["id"])
+                        row.setValue("DATETIME", requesttime)
+                        ###now deal with the way tags:
+                        if "tags" in element:
+                            for tag in element["tags"]:
+                                try:
+                                    row.setValue(tag.replace(":", ""), element["tags"][tag])
+                                except:
+                                    arcpy.AddMessage("Adding value failed.")
+                        polygon_fc_cursor.insertRow(row)
+                        del row
+                    else: #lines have different start end endnodes:
+                        row = line_fc_cursor.newRow()
+                        pointArray = arcpy.Array(nodeGeoemtry)
+                        row.setValue("SHAPE", pointArray)
+                        row.setValue("OSM_ID", element["id"])
+                        row.setValue("DATETIME", requesttime)
+                        ###now deal with the way tags:
+                        if "tags" in element:
+                            for tag in element["tags"]:
+                                try:
+                                    row.setValue(tag.replace(":", ""), element["tags"][tag])
+                                except:
+                                    arcpy.AddMessage("Adding value failed.")
+                        line_fc_cursor.insertRow(row)
+                        del row
+            except:
+                arcpy.AddWarning("OSM element " + str(element["id"]) + " could not be written to FC")
         if returnArray[0]:
             del point_fc_cursor
         if returnArray[1]:
@@ -439,7 +447,7 @@ class Tool(object):
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
 
-        FCs = Toolbox.fillFC(data)
+        FCs = Toolbox.fillFC(data, parameters[7].value)
         arcpy.AddMessage(FCs)
         if FCs[0]:
             parameters[8].value = FCs[0]
@@ -465,7 +473,16 @@ class OverpassTool(object):
             parameterType="Required",
             direction="Input"
         )
-        param0.value = '[out:json][timeout:25];node["man_made"="water_well"]out;>;'
+        param0.value = 'node(47.158,102.766,47.224,102.923);'
+        param1 = arcpy.Parameter(
+            displayName="Reference date/time UTC",
+            name="in_date",
+            datatype="GPDate",
+            parameterType="Optional",
+            direction="Input",
+        )
+        now = datetime.datetime.utcnow()
+        param1.value = now.strftime("%d.%m.%Y %H:%M:%S")
         param_out0 = arcpy.Parameter(
             displayName="Layer containing OSM point data",
             name="out_nodes",
@@ -487,7 +504,7 @@ class OverpassTool(object):
             parameterType="Derived",
             direction="Output"
         )
-        params = [param0, param_out0, param_out1, param_out2]
+        params = [param0, param1, param_out0, param_out1, param_out2]
 
         return params
 
@@ -510,7 +527,11 @@ class OverpassTool(object):
         """The source code of the tool."""
         # Get data using urllib
         QUERY_URL = "http://overpass-api.de/api/interpreter"
-        query = parameters[0].valueAsText
+
+        QUERY_START = "[out:json][timeout:25]"
+        QUERY_DATE = '[date:"' + parameters[1].value.strftime("%Y-%m-%dT%H:%M:%SZ") + '"];('
+        QUERY_END = ');(._;>;);out;>;'
+        query = QUERY_START + QUERY_DATE + parameters[0].valueAsText + QUERY_END
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
@@ -531,12 +552,12 @@ class OverpassTool(object):
         arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
-        FCs = Toolbox.fillFC(data)
+        FCs = Toolbox.fillFC(data, parameters[1].value)
 
         if FCs[0]:
-            parameters[1].value = FCs[0]
+            parameters[2].value = FCs[0]
         if FCs[1]:
-            parameters[2].value = FCs[1]
+            parameters[3].value = FCs[1]
         if FCs[2]:
-            parameters[3].value = FCs[2]
+            parameters[4].value = FCs[2]
         return
