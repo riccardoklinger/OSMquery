@@ -37,8 +37,9 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [Tool, OverpassTool]
+
     @classmethod
-    def create_result_fc(self,geometry_type, fields, timestamp):
+    def create_result_fc(self, geometry_type, fields, timestamp):
         fc_name = '%ss_%s' % (geometry_type, str(timestamp))
         fc = join(arcpy.env.scratchWorkspace, fc_name)
 
@@ -57,26 +58,23 @@ class Toolbox(object):
                 field = field.replace(":", "")
                 arcpy.AddMessage("\tAdding attribute %s..." % field)
                 arcpy.AddField_management(fc, field, "STRING", 255, "", "", field, "NULLABLE")
-            except:
+            except arcpy.ExecuteError:
                 arcpy.AddMessage("\tAdding attribute %s failed.")
         return fc
+
     @classmethod
-    def fillFC(self,data, requesttime):
-        returnArray = [None,None,None]
-        timestamp =  int(time.time())
+    def fillFC(self, data, requesttime):
+        returnArray = [None, None, None]
+        timestamp = int(time.time())
         ########################################################
         ###creating feature classes according to the response###
         ########################################################
 
         points = [element for element in data['elements'] if element["type"] == "node"]
         lines = [element for element in data['elements'] if element["type"] == "way" and
-                 (element["nodes"][0] != element["nodes"][len(element["nodes"])-1])]
+                 (element["nodes"][0] != element["nodes"][len(element["nodes"]) - 1])]
         polygons = [element for element in data['elements'] if element["type"] == "way" and
-                    (element["nodes"][0] == element["nodes"][len(element["nodes"])-1])]
-
-        points_created = True if len(points) > 0 else False
-        lines_created = True if len(lines) > 0 else False
-        polygons_created = True if len(polygons) > 0 else False
+                    (element["nodes"][0] == element["nodes"][len(element["nodes"]) - 1])]
 
         # Iterate through elements per geometry type (points (nodes), lines (open ways; i.e. start and end node are not
         # identical), polygons (closed ways) and collect attributes
@@ -99,21 +97,21 @@ class Toolbox(object):
         if len(points) > 0:
             point_fc = self.create_result_fc('Point', point_fc_fields, timestamp)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
-            returnArray[0]=point_fc
+            returnArray[0] = point_fc
         else:
             arcpy.AddMessage("\nData contains no point features.")
 
         if len(lines) > 0:
             line_fc = self.create_result_fc('Line', line_fc_fields, timestamp)
             line_fc_cursor = arcpy.InsertCursor(line_fc)
-            returnArray[1]=line_fc
+            returnArray[1] = line_fc
         else:
             arcpy.AddMessage("\nData contains no line features.")
 
         if len(polygons) > 0:
             polygon_fc = self.create_result_fc('Polygon', polygon_fc_fields, timestamp)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
-            returnArray[2]=polygon_fc
+            returnArray[2] = polygon_fc
         else:
             arcpy.AddMessage("\nData contains no polygon features.")
 
@@ -123,10 +121,11 @@ class Toolbox(object):
         for element in data['elements']:
             ###we deal with nodes first
             try:
-                if element["type"]=="node" and "tags" in element:
+                if element["type"] == "node" and "tags" in element:
                     row = point_fc_cursor.newRow()
-                    PtGeometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]), arcpy.SpatialReference(4326))
-                    row.setValue("SHAPE", PtGeometry)
+                    point_geometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]),
+                                                     arcpy.SpatialReference(4326))
+                    row.setValue("SHAPE", point_geometry)
                     row.setValue("OSM_ID", element["id"])
                     row.setValue("DATETIME", requesttime)
                     for tag in element["tags"]:
@@ -136,19 +135,19 @@ class Toolbox(object):
                             arcpy.AddMessage("Adding value failed.")
                     point_fc_cursor.insertRow(row)
                     del row
-                if element["type"]=="way" and "tags" in element:
+                if element["type"] == "way" and "tags" in element:
                     ### getting needed Node Geometries:
                     nodes = element["nodes"]
-                    nodeGeoemtry = []
+                    node_geometry = []
                     ### finding nodes in reverse mode
                     for node in nodes:
                         for NodeElement in data['elements']:
                             if NodeElement["id"] == node:
-                                nodeGeoemtry.append(arcpy.Point(NodeElement["lon"],NodeElement["lat"]))
+                                node_geometry.append(arcpy.Point(NodeElement["lon"], NodeElement["lat"]))
                                 break
-                    if nodes[0]==nodes[len(nodes)-1]:
+                    if nodes[0] == nodes[len(nodes) - 1]:
                         row = polygon_fc_cursor.newRow()
-                        pointArray = arcpy.Array(nodeGeoemtry)
+                        pointArray = arcpy.Array(node_geometry)
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
                         row.setValue("DATETIME", requesttime)
@@ -161,9 +160,9 @@ class Toolbox(object):
                                     arcpy.AddMessage("Adding value failed.")
                         polygon_fc_cursor.insertRow(row)
                         del row
-                    else: #lines have different start end endnodes:
+                    else:  # lines have different start end endnodes:
                         row = line_fc_cursor.newRow()
-                        pointArray = arcpy.Array(nodeGeoemtry)
+                        pointArray = arcpy.Array(node_geometry)
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
                         row.setValue("DATETIME", requesttime)
@@ -186,6 +185,59 @@ class Toolbox(object):
             del polygon_fc_cursor
         return returnArray
 
+    def set_spatial_reference(self, srs, transformation):
+        """Given a Spatial Reference System string and (potentially) a transformation, create an arcpy.SpatialReference
+        object and (if given) set the geographic transformation environment setting."""
+        if srs is not None:
+            spatial_reference = arcpy.SpatialReference()
+            spatial_reference.loadFromString(srs)
+        else:
+            spatial_reference = arcpy.SpatialReference(4326)
+        if transformation is not None:
+            arcpy.env.geographicTransformations = transformation
+        return spatial_reference
+
+    def get_bounding_box(extent_indication_method, region_name, extent):
+        """ Given a method for indicating the extent to be queried and either a region name or an extent object,
+        construct the string with extent information for querying the Overpass API"""
+        if extent_indication_method == "Define a bounding box":
+            if extent.spatialReference == arcpy.SpatialReference(4326):
+                # There is no reprojection necessary of the EPSG:4326 coordinates
+                bounding_box = [extent.YMin, extent.XMin, extent.YMax, extent.XMax]
+            else:
+                # The coordinates of the extent object need to be reprojected to EPSG:4326 for query building
+                ll = arcpy.PointGeometry(arcpy.Point(extent.XMin, extent.YMin),
+                                         extent.spatialReference).projectAs(arcpy.SpatialReference(4326))
+                ur = arcpy.PointGeometry(arcpy.Point(extent.XMax, extent.YMax),
+                                         extent.spatialReference).projectAs(arcpy.SpatialReference(4326))
+                bounding_box = [ll.extent.YMin, ll.extent.XMin, ur.extent.YMax, ur.extent.XMax]
+            return '', '(%s);' % ','.join(str(e) for e in bounding_box)
+
+        elif extent_indication_method == "Geocode a region name":
+            # Get an area ID from Nominatim geocoding service
+            nominatim_url = 'https://nominatim.openstreetmap.org/search?q=%s&format=json' % region_name
+            arcpy.AddMessage("\nGecoding region using Nominatim: %s..." % nominatim_url)
+            nominatim_response = requests.get(nominatim_url)
+            try:
+                nominatim_data = nominatim_response.json()
+                for result in nominatim_data:
+                    if result["osm_type"] == "relation":
+                        nominatim_area_id = result['osm_id']
+                        try:
+                            arcpy.AddMessage("\tFound region " + result['display_name'])
+                        except:
+                            arcpy.AddMessage("\tFound region " + str(nominatim_area_id))
+                        break
+                bounding_box_head = 'area(' + str(int(nominatim_area_id) + 3600000000) + ')->.searchArea;'
+                bounding_box_data = '(area.searchArea);'
+                return bounding_box_head, bounding_box_data
+            except:
+                arcpy.AddError("\tNo region found!")
+                return '', ''
+        else:
+            raise ValueError
+
+
 class Tool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -193,145 +245,133 @@ class Tool(object):
         self.description = ""
         self.canRunInBackground = False
 
-    def getConfig(self, configItem):
-        ###load config file
+    def get_config(self, config_item):
+        """Load the configuration file and find either major OSM tag keys or suitable OSM tag values for a given key"""
+        # Load JSON file with configuration info
         json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
         if isfile(json_file_config):
             with open(json_file_config) as f:
                 config_json = json.load(f)
-        array = []
-        ###select all major tags:
-        if configItem == "all":
-            for tag in config_json:
-                array.append(tag)
-        ###select all keys for the desried tag:
-        if configItem != "all":
-            for key in config_json[configItem]:
-                array.append(key)
-        return array
+        # Compile a list of all major OSM tag keys
+        if config_item == "all":
+            return [key for key in config_json]
+        # Compile a list of all major OSM tag values for the given OSM tag key
+        else:
+            return [value for value in config_json[config_item]]
 
-    def getServer(self):
-        ###load config file
+
+    def get_servers(self):
+        """Load the configuration file and find Overpass API endpoints (this function is not in use yet)"""
+        # Load JSON file with configuration info
         json_file_config = join(dirname(abspath(__file__)), 'config/servers.json')
         if isfile(json_file_config):
             with open(json_file_config) as f:
                 config_json = json.load(f)
-        array = []
-        ###select all major tags:
-        for server in config_json["overpass_servers"]:
-            array.append(server)
-        return array
+        return [server for server in config_json["overpass_servers"]]
+
 
     def getParameterInfo(self):
-        """Define parameter definitions"""
-        ###let's read the config files with Tags and keys###
+        """Define parameter definitions for the ArcGIS toolbox"""
         param0 = arcpy.Parameter(
-            displayName="OSM tag key",
-            name="in_tag",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input"
-        )
-        param0.filter.list = self.getConfig('all')
+                displayName="OSM tag key",
+                name="in_tag",
+                datatype="GPString",
+                parameterType="Required",
+                direction="Input")
+        param0.filter.list = self.get_config('all')
         param0.value = param0.filter.list[0]
         param1 = arcpy.Parameter(
-            displayName="OSM tag value",
-            name="in_key",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input",
-            multiValue=True
-        )
+                displayName="OSM tag value",
+                name="in_key",
+                datatype="GPString",
+                parameterType="Required",
+                direction="Input",
+                multiValue=True)
         param2 = arcpy.Parameter(
-            displayName="Spatial extent indication method",
-            name="in_regMode",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input"
-        )
-        param2.filter.list = ["Geocode a region name","Define a bounding box"]
+                displayName="Spatial extent indication method",
+                name="in_regMode",
+                datatype="GPString",
+                parameterType="Required",
+                direction="Input")
+        param2.filter.list = ["Geocode a region name", "Define a bounding box"]
         param2.value = "Define a bounding box"
         param3 = arcpy.Parameter(
-            displayName="Region name",
-            name="in_region",
-            datatype="GPString",
-            parameterType="Optional",
-            direction="Input"
-        )
-
+                displayName="Region name",
+                name="in_region",
+                datatype="GPString",
+                parameterType="Optional",
+                direction="Input")
         param4 = arcpy.Parameter(
-            displayName="Bounding box",
-            name="in_bbox",
-            datatype="GPExtent",
-            parameterType="Optional",
-            direction="Input",
-            enabled=False
-        )
+                displayName="Bounding box",
+                name="in_bbox",
+                datatype="GPExtent",
+                parameterType="Optional",
+                direction="Input",
+                enabled=False)
         param5 = arcpy.Parameter(
-            displayName="Output CRS",
-            name="in_crs",
-            datatype="GPCoordinateSystem",
-            parameterType="Optional",
-            category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
-            direction="Input"
-        )
+                displayName="Output CRS",
+                name="in_crs",
+                datatype="GPCoordinateSystem",
+                parameterType="Optional",
+                category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
+                direction="Input")
         param5.value = arcpy.SpatialReference(4326)
         param6 = arcpy.Parameter(
-            displayName="Transformation",
-            name="in_transformation",
-            datatype="GPString",
-            parameterType="Optional",
-            category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
-            direction="Input",
-            enabled=False
-        )
+                displayName="Transformation",
+                name="in_transformation",
+                datatype="GPString",
+                parameterType="Optional",
+                category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
+                direction="Input",
+                enabled=False)
         param7 = arcpy.Parameter(
-            displayName="Reference date/time UTC",
-            name="in_date",
-            datatype="GPDate",
-            parameterType="Optional",
-            direction="Input",
-        )
+                displayName="Reference date/time UTC",
+                name="in_date",
+                datatype="GPDate",
+                parameterType="Optional",
+                direction="Input")
         now = datetime.datetime.utcnow()
         try:
             param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
         except:
             param7.value = now.strftime("%d/%m/%Y %H:%M:%S")
         param_out0 = arcpy.Parameter(
-            displayName="Layer containing OSM point data",
-            name="out_nodes",
-            datatype="GPFeatureLayer",
-            parameterType="Derived",
-            direction="Output"
-        )
+                displayName="Layer containing OSM point data",
+                name="out_nodes",
+                datatype="GPFeatureLayer",
+                parameterType="Derived",
+                direction="Output")
         param_out1 = arcpy.Parameter(
-            displayName="Layer containing OSM line data",
-            name="out_ways",
-            datatype="GPFeatureLayer",
-            parameterType="Derived",
-            direction="Output"
-        )
+                displayName="Layer containing OSM line data",
+                name="out_ways",
+                datatype="GPFeatureLayer",
+                parameterType="Derived",
+                direction="Output")
         param_out2 = arcpy.Parameter(
-            displayName="Layer containing OSM polygon data",
-            name="out_poly",
-            datatype="GPFeatureLayer",
-            parameterType="Derived",
-            direction="Output"
-        )
-        params = [param0, param1, param2, param3, param4, param5, param6, param7, param_out0, param_out1, param_out2]
+                displayName="Layer containing OSM polygon data",
+                name="out_poly",
+                datatype="GPFeatureLayer",
+                parameterType="Derived",
+                direction="Output")
 
-        return params
+        return [param0, param1, param2, param3, param4, param5, param6, param7, param_out0, param_out1, param_out2]
+
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
 
+
     def updateParameters(self, parameters):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        #update the parameters of keys accroding the values of "in_tag"
-        parameters[1].filter.list = self.getConfig(parameters[0].value)
+
+        # Update the parameters of keys accroding the values of "in_tag"
+        parameters[1].filter.list = self.get_config(parameters[0].value)
+
+        # Switch the availability of the 'region name' parameter and the 'extent'
+        # parameter depending on which extent indication method is selected
         if parameters[2].value == "Geocode a region name":
             parameters[3].enabled = True
             parameters[4].enabled = False
@@ -357,19 +397,16 @@ class Tool(object):
         parameter.  This method is called after internal validation."""
         # if only time is selected, year will be autofilled with "1899"
         if parameters[7].value.year < 2004:
-            parameters[7].setWarningMessage("No or invalid date provided! Date must be greater than 9th of August 2004!")
+            parameters[7].setWarningMessage(
+                "No or invalid date provided! Date must be greater than 9th of August 2004!")
         return
 
     def execute(self, parameters, messages):
-        """The source code of the tool."""
-        if parameters[5].value is not None:
-            sr = arcpy.SpatialReference()
-            sr.loadFromString(parameters[5].value)
-        else:
-            sr = arcpy.SpatialReference(4326)
-        if parameters[6].value is not None:
-            transformation = parameters[6].value
-            arcpy.env.geographicTransformations = transformation
+        """The code that is run, when the ArcGIS tool is run."""
+
+        # Set some environment settings
+        arcpy.env.overwriteOutput = True
+        arcpy.env.addOutputsToMap = True
 
         # Constants for building the query to the Overpass API
         QUERY_URL = "http://overpass-api.de/api/interpreter"
@@ -377,64 +414,49 @@ class Tool(object):
         QUERY_DATE = '[date:"' + parameters[7].value.strftime("%Y-%m-%dT%H:%M:%SZ") + '"];('
         QUERY_END = ');(._;>;);out;>;'
 
-        keys = parameters[1].value.exportToString().split(";")
+        # Create the spatial reference and set the geographic transformation in the environment settings (if given)
+        sr = Toolbox.set_spatial_reference(parameters[5].value, parameters[6].value)
 
-        if parameters[2].value != "Geocode a region name":
-            bboxHead = ''
-            if parameters[4].value.spatialReference != arcpy.SpatialReference(4326):
-                LL = arcpy.PointGeometry(arcpy.Point(parameters[4].value.XMin,parameters[4].value.YMin), parameters[4].value.spatialReference).projectAs(arcpy.SpatialReference(4326))
-                UR = arcpy.PointGeometry(arcpy.Point(parameters[4].value.XMax,parameters[4].value.YMax), parameters[4].value.spatialReference).projectAs(arcpy.SpatialReference(4326))
-                bbox = [LL.extent.YMin, LL.extent.XMin, UR.extent.YMax, UR.extent.XMax]
-            else:
-                bbox = [parameters[4].value.YMin,parameters[4].value.XMin,parameters[4].value.YMax,parameters[4].value.XMax]
-            bboxData = '(' + ','.join(str(e) for e in bbox) + ');'
-        else:
-            ###getting areaID from Nominatim:
-            nominatimURL = 'https://nominatim.openstreetmap.org/search?q=' + parameters[3].valueAsText + '&format=json'
-            NominatimResponse = requests.get(nominatimURL)
-            arcpy.AddMessage("\nGecoding region using the url %s..." % nominatimURL)
-            try:
-                NominatimData = NominatimResponse.json()
+        # Get the bounding box-related parts of the Overpass API query, using the indicated extent or by geocoding a
+        # region name given by the user
+        bbox_head, bbox_data = get_bounding_box(parameters[2].value, parameters[3].value, parameters[4].value)
 
-                for result in NominatimData:
-                    if result["osm_type"] == "relation":
-                        areaID = result['osm_id']
-                        try:
-                            arcpy.AddMessage("\tFound region " + result['display_name'])
-                        except:
-                            arcpy.AddMessage("\tFound region " + str(areaID))
-                        break
-                bboxHead = 'area(' + str(int(areaID) + 3600000000) + ')->.searchArea;'
-                bboxData = '(area.searchArea);'
-            except:
-                arcpy.AddError("\tNo region found!")
-                return
+        # Get the list of OSM tag values checked by the user. The tool makes the user supply at least one key.
+        tag_key = parameters[0].value
+        tag_values = parameters[1].value.exportToString().split(";")
 
-        # Get data using urllib
-        # The tool makes the user supply at least one key
-        if len(keys) == 1 and "'* (any value, including the ones listed below)'" not in keys:
-            arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + keys[0])
-            nodeData = 'node["' + parameters[0].value + '"="' + keys[0] + '"]'
-            wayData = 'way["' + parameters[0].value + '"="' + keys[0] + '"]'
-            relationData = 'relation["' + parameters[0].value + '"="' + keys[0] + '"]'
-        elif len(keys) > 1 and "'* (any value, including the ones listed below)'" not in keys:
-            arcpy.AddMessage("\nCollecting " + parameters[0].value + " = " + "|".join(keys))
-            nodeData = 'node["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
-            wayData = 'way["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
-            relationData = 'relation["' + parameters[0].value + '"~"' + "|".join(keys) + '"]'
-        #replace any query if star is selected:
-        elif "'* (any value, including the ones listed below)'" in keys:
-            arcpy.AddMessage("\nCollecting " + parameters[0].value + " = * (any value)")
-            nodeData = 'node["' + parameters[0].value + '"]'
-            wayData = 'way["' + parameters[0].value + '"]'
-            relationData = 'relation["' + parameters[0].value + '"]'
+        # If the wildcard (*) option is selected, replace any other tag value that might be selected
+        if "'* (any value, including the ones listed below)'" in tag_values:
+            arcpy.AddMessage("\nCollecting " + tag_key + " = * (any value)")
+            nodeData = 'node["' + tag_key + '"]'
+            wayData = 'way["' + tag_key + '"]'
+            relationData = 'relation["' + tag_key + '"]'
+        # Query only for one tag value
+        elif len(tag_values) == 1:
+            tag_value = tag_values[0]
+            arcpy.AddMessage("\nCollecting " + tag_key + " = " + tag_value)
+            nodeData = 'node["' + tag_key + '"="' + tag_value + '"]'
+            wayData = 'way["' + tag_key + '"="' + tag_value + '"]'
+            relationData = 'relation["' + tag_key + '"="' + tag_value + '"]'
+        # Query for a combination of tag values
+        elif len(tag_values) > 1:
+            tag_values = "|".join(tag_values)
+            arcpy.AddMessage("\nCollecting " + tag_key + " = " + tag_values)
+            nodeData = 'node["' + tag_key + '"~"' + tag_values + '"]'
+            wayData = 'way["' + tag_key + '"~"' + tag_values + '"]'
+            relationData = 'relation["' + tag_key + '"~"' + tag_values + '"]'
 
-        query = QUERY_START + QUERY_DATE + bboxHead + nodeData + bboxData + wayData + bboxData + relationData + bboxData + QUERY_END
+        query = (QUERY_START + QUERY_DATE + bbox_head +
+                 nodeData + bbox_data +
+                 wayData + bbox_data +
+                 relationData + bbox_data +
+                 QUERY_END)
+
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
-        if response.status_code!=200:
-            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code) )
+        if response.status_code != 200:
+            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code))
             return
         try:
             data = response.json()
@@ -447,8 +469,6 @@ class Tool(object):
             return
         else:
             arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
-        arcpy.env.overwriteOutput = True
-        arcpy.env.addOutputsToMap = True
 
         FCs = Toolbox.fillFC(data, parameters[7].value)
         arcpy.AddMessage(FCs)
@@ -459,6 +479,8 @@ class Tool(object):
         if FCs[2]:
             parameters[10].value = FCs[2]
         return
+
+
 class OverpassTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -470,50 +492,50 @@ class OverpassTool(object):
         """Define parameter definitions"""
         ###let's read the config files with Tags and keys###
         param0 = arcpy.Parameter(
-            displayName="Overpass Query",
-            name="in_query",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input"
+                displayName="Overpass Query",
+                name="in_query",
+                datatype="GPString",
+                parameterType="Required",
+                direction="Input"
         )
         param0.value = 'node(47.158,102.766,47.224,102.923);'
         param1 = arcpy.Parameter(
-            displayName="Reference date/time UTC",
-            name="in_date",
-            datatype="GPDate",
-            parameterType="Optional",
-            direction="Input",
+                displayName="Reference date/time UTC",
+                name="in_date",
+                datatype="GPDate",
+                parameterType="Optional",
+                direction="Input",
         )
         now = datetime.datetime.utcnow()
         param1.value = now.strftime("%d.%m.%Y %H:%M:%S")
         param_out0 = arcpy.Parameter(
-            displayName="Layer containing OSM point data",
-            name="out_nodes",
-            datatype="GPFeatureLayer",
-            parameterType="Derived",
-            direction="Output"
+                displayName="Layer containing OSM point data",
+                name="out_nodes",
+                datatype="GPFeatureLayer",
+                parameterType="Derived",
+                direction="Output"
         )
         param_out1 = arcpy.Parameter(
-            displayName="Layer containing OSM line data",
-            name="out_ways",
-            datatype="GPFeatureLayer",
-            parameterType="Derived",
-            direction="Output"
+                displayName="Layer containing OSM line data",
+                name="out_ways",
+                datatype="GPFeatureLayer",
+                parameterType="Derived",
+                direction="Output"
         )
         param_out2 = arcpy.Parameter(
-            displayName="Layer containing OSM polygon data",
-            name="out_poly",
-            datatype="GPFeatureLayer",
-            parameterType="Derived",
-            direction="Output"
+                displayName="Layer containing OSM polygon data",
+                name="out_poly",
+                datatype="GPFeatureLayer",
+                parameterType="Derived",
+                direction="Output"
         )
-        params = [param0, param1, param_out0, param_out1, param_out2]
+        return [param0, param1, param_out0, param_out1, param_out2]
 
-        return params
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
+
 
     def updateParameters(self, parameters):
         """Modify the values and properties of parameters before internal
@@ -521,10 +543,12 @@ class OverpassTool(object):
         has been changed."""
         return
 
+
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
         return
+
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
@@ -538,8 +562,8 @@ class OverpassTool(object):
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
-        if response.status_code!=200:
-            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code) )
+        if response.status_code != 200:
+            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code))
             return
         try:
             data = response.json()
