@@ -66,7 +66,6 @@ class Toolbox(object):
                 arcpy.AddMessage("\tAdding attribute %s failed.")
         return fc
 
-
     @classmethod
     def extract_features_from_json(cls, data):
         """Extract lists of point, line, polygon objects from an Overpass API
@@ -77,7 +76,6 @@ class Toolbox(object):
         polygons = [e for e in data['elements'] if e["type"] == "way" and
                     (e["nodes"][0] == e["nodes"][len(e["nodes"])-1])]
         return points, lines, polygons
-
 
     @classmethod
     def get_attributes_from_features(cls, points, lines, polygons):
@@ -100,9 +98,9 @@ class Toolbox(object):
     def fillFC(cls, data, requesttime):
         returnArray = [None, None, None]
 
-        ########################################################
-        ###creating feature classes according to the response###
-        ########################################################
+        # ------------------------------------------------------
+        # Creating feature classes according to the response
+        # ------------------------------------------------------
 
         # Extract geometries (if present) from JSON data: points (nodes),
         # lines (open ways; i.e. start and end node are not identical) and
@@ -119,7 +117,7 @@ class Toolbox(object):
         timestamp = int(time.time())
         if len(points) > 0:
             point_fc = Toolbox.create_result_fc('Point', point_fc_fields,
-                                             timestamp)
+                                                timestamp)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
             returnArray[0] = point_fc
         else:
@@ -141,35 +139,41 @@ class Toolbox(object):
         else:
             arcpy.AddMessage("\nData contains no polygon features.")
 
-        #######################################################
-        ###filling feature classes according to the response###
-        #######################################################
+        # ------------------------------------------------------
+        # Filling feature classes according to the response
+        # ------------------------------------------------------
+
         for element in data['elements']:
-            ###we deal with nodes first
+            # Deal with nodes first
             try:
                 if element["type"] == "node" and "tags" in element:
                     row = point_fc_cursor.newRow()
-                    point_geometry = arcpy.PointGeometry(arcpy.Point(element["lon"], element["lat"]),
-                                                     arcpy.SpatialReference(4326))
+                    point_geometry = \
+                        arcpy.PointGeometry(arcpy.Point(element["lon"],
+                                                        element["lat"]),
+                                            arcpy.SpatialReference(4326))
                     row.setValue("SHAPE", point_geometry)
                     row.setValue("OSM_ID", element["id"])
                     row.setValue("DATETIME", requesttime)
                     for tag in element["tags"]:
                         try:
-                            row.setValue(tag.replace(":", ""), element["tags"][tag])
+                            row.setValue(tag.replace(":", ""),
+                                         element["tags"][tag])
                         except:
                             arcpy.AddMessage("Adding value failed.")
                     point_fc_cursor.insertRow(row)
                     del row
                 if element["type"] == "way" and "tags" in element:
-                    ### getting needed Node Geometries:
+                    # Get needed node geometries:
                     nodes = element["nodes"]
                     node_geometry = []
-                    ### finding nodes in reverse mode
+                    # Find nodes in reverse mode
                     for node in nodes:
                         for NodeElement in data['elements']:
                             if NodeElement["id"] == node:
-                                node_geometry.append(arcpy.Point(NodeElement["lon"], NodeElement["lat"]))
+                                node_geometry.append(
+                                        arcpy.Point(NodeElement["lon"],
+                                                    NodeElement["lat"]))
                                 break
                     if nodes[0] == nodes[len(nodes) - 1]:
                         row = polygon_fc_cursor.newRow()
@@ -177,11 +181,12 @@ class Toolbox(object):
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
                         row.setValue("DATETIME", requesttime)
-                        ###now deal with the way tags:
+                        # Now deal with the way tags:
                         if "tags" in element:
                             for tag in element["tags"]:
                                 try:
-                                    row.setValue(tag.replace(":", ""), element["tags"][tag])
+                                    row.setValue(tag.replace(":", ""),
+                                                 element["tags"][tag])
                                 except:
                                     arcpy.AddMessage("Adding value failed.")
                         polygon_fc_cursor.insertRow(row)
@@ -192,17 +197,19 @@ class Toolbox(object):
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
                         row.setValue("DATETIME", requesttime)
-                        ###now deal with the way tags:
+                        # now deal with the way tags:
                         if "tags" in element:
                             for tag in element["tags"]:
                                 try:
-                                    row.setValue(tag.replace(":", ""), element["tags"][tag])
+                                    row.setValue(tag.replace(":", ""),
+                                                 element["tags"][tag])
                                 except:
                                     arcpy.AddMessage("Adding value failed.")
                         line_fc_cursor.insertRow(row)
                         del row
             except:
-                arcpy.AddWarning("OSM element " + str(element["id"]) + " could not be written to FC")
+                arcpy.AddWarning("OSM element %s could not be written to FC" %
+                                 element["id"])
         if returnArray[0]:
             del point_fc_cursor
         if returnArray[1]:
@@ -288,9 +295,15 @@ class Tool(object):
         suitable OSM tag values for a given key"""
         # Load JSON file with configuration info
         json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
-        if isfile(json_file_config):
+        try:
             with open(json_file_config) as f:
                 config_json = json.load(f)
+        except IOError:
+            arcpy.AddError('Configuration file %s not found.' %
+                           json_file_config)
+        except IOError:
+            arcpy.AddError('Configuration file %s not found.' %
+                           json_file_config)
         # Compile a list of all major OSM tag keys
         if config_item == "all":
             return [key for key in config_json]
@@ -539,7 +552,6 @@ class OverpassTool(object):
 
     def getParameterInfo(self):
         """Define parameter definitions"""
-        ###let's read the config files with Tags and keys###
         param0 = arcpy.Parameter(
                 displayName="Overpass Query",
                 name="in_query",
