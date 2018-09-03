@@ -39,7 +39,7 @@ class Toolbox(object):
         self.tools = [Tool, OverpassTool]
 
     @classmethod
-    def create_result_fc(self, geometry_type, fields, timestamp):
+    def create_result_fc(cls, geometry_type, fields, timestamp):
         fc_name = '%ss_%s' % (geometry_type, str(timestamp))
         fc = join(arcpy.env.scratchWorkspace, fc_name)
 
@@ -66,41 +66,59 @@ class Toolbox(object):
                 arcpy.AddMessage("\tAdding attribute %s failed.")
         return fc
 
-    @classmethod
-    def fillFC(self, data, requesttime):
-        returnArray = [None, None, None]
-        timestamp = int(time.time())
-        ########################################################
-        ###creating feature classes according to the response###
-        ########################################################
 
+    @classmethod
+    def extract_features_from_json(cls, data):
+        """Extract lists of point, line, polygon objects from an Overpass API
+        response JSON object"""
         points = [e for e in data['elements'] if e["type"] == "node"]
         lines = [e for e in data['elements'] if e["type"] == "way" and
                  (e["nodes"][0] != e["nodes"][len(e["nodes"])-1])]
         polygons = [e for e in data['elements'] if e["type"] == "way" and
                     (e["nodes"][0] == e["nodes"][len(e["nodes"])-1])]
+        return points, lines, polygons
 
-        # Iterate through elements per geometry type (points (nodes), lines
-        # (open ways; i.e. start and end node are not identical), polygons
-        # (closed ways) and collect their attributes
+
+    @classmethod
+    def get_attributes_from_features(cls, points, lines, polygons):
         point_fc_fields = set()
         line_fc_fields = set()
         polygon_fc_fields = set()
-
         for element in [e for e in points if "tags" in e]:
             for tag in element["tags"]:
                 point_fc_fields.add(tag)
-
         for element in [e for e in lines if "tags" in e]:
             for tag in element["tags"]:
                 line_fc_fields.add(tag)
-
         for element in [e for e in polygons if "tags" in e]:
             for tag in element["tags"]:
                 polygon_fc_fields.add(tag)
+        return point_fc_fields, line_fc_fields, polygon_fc_fields
 
+
+    @classmethod
+    def fillFC(cls, data, requesttime):
+        returnArray = [None, None, None]
+
+        ########################################################
+        ###creating feature classes according to the response###
+        ########################################################
+
+        # Extract geometries (if present) from JSON data: points (nodes),
+        # lines (open ways; i.e. start and end node are not identical) and
+        # polygons (closed ways)
+        points, lines, polygons = Toolbox.extract_features_from_json(data)
+
+        # Per geometry type, gather all atributes present in the data
+        # through elements per geometry type and collect their attributes
+        point_fc_fields, line_fc_fields, polygon_fc_fields = \
+            Toolbox.get_attributes_from_features(points, lines, polygons)
+
+        # Per geometry type, create a feature class if there are features in
+        # the data
+        timestamp = int(time.time())
         if len(points) > 0:
-            point_fc = self.create_result_fc('Point', point_fc_fields,
+            point_fc = Toolbox.create_result_fc('Point', point_fc_fields,
                                              timestamp)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
             returnArray[0] = point_fc
@@ -108,14 +126,15 @@ class Toolbox(object):
             arcpy.AddMessage("\nData contains no point features.")
 
         if len(lines) > 0:
-            line_fc = self.create_result_fc('Line', line_fc_fields, timestamp)
+            line_fc = Toolbox.create_result_fc('Line', line_fc_fields,
+                                               timestamp)
             line_fc_cursor = arcpy.InsertCursor(line_fc)
             returnArray[1] = line_fc
         else:
             arcpy.AddMessage("\nData contains no line features.")
 
         if len(polygons) > 0:
-            polygon_fc = self.create_result_fc('Polygon', polygon_fc_fields,
+            polygon_fc = Toolbox.create_result_fc('Polygon', polygon_fc_fields,
                                                timestamp)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
             returnArray[2] = polygon_fc
