@@ -310,7 +310,6 @@ class Tool(object):
         else:
             return [value for value in config_json[config_item]]
 
-
     def get_servers(self):
         """Load the configuration file and find Overpass API endpoints
         (this function is not in use yet)"""
@@ -325,7 +324,6 @@ class Tool(object):
             arcpy.AddError('Configuration file %s is not valid JSON.' %
                            json_file)
         return [server for server in config_json["overpass_servers"]]
-
 
     def getParameterInfo(self):
         """Define parameter definitions for the ArcGIS toolbox"""
@@ -416,11 +414,9 @@ class Tool(object):
         return [param0, param1, param2, param3, param4, param5, param6,
                 param7, param_out0, param_out1, param_out2]
 
-
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
-
 
     def updateParameters(self, parameters):
         """Modify the values and properties of parameters before internal
@@ -476,52 +472,60 @@ class Tool(object):
         # Constants for building the query to the Overpass API
         QUERY_URL = "http://overpass-api.de/api/interpreter"
         QUERY_START = "[out:json][timeout:25]"
-        QUERY_DATE = '[date:"' + parameters[7].value.strftime("%Y-%m-%dT%H:%M:%SZ") + '"];('
+        QUERY_DATE = '[date:"%s"];(' % \
+                     parameters[7].value.strftime("%Y-%m-%dT%H:%M:%SZ")
         QUERY_END = ');(._;>;);out;>;'
 
-        # Create the spatial reference and set the geographic transformation in the environment settings (if given)
-        sr = Toolbox.set_spatial_reference(parameters[5].value, parameters[6].value)
+        # Create the spatial reference and set the geographic transformation
+        # in the environment settings (if given)
+        sr = Toolbox.set_spatial_reference(parameters[5].value,
+                                           parameters[6].value)
 
-        # Get the bounding box-related parts of the Overpass API query, using the indicated extent or by geocoding a
-        # region name given by the user
-        bbox_head, bbox_data = get_bounding_box(parameters[2].value, parameters[3].value, parameters[4].value)
+        # Get the bounding box-related parts of the Overpass API query, using
+        # the indicated extent or by geocoding a region name given by the user
+        bbox_head, bbox_data = get_bounding_box(parameters[2].value,
+                                                parameters[3].value,
+                                                parameters[4].value)
 
-        # Get the list of OSM tag values checked by the user. The tool makes the user supply at least one key.
+        # Get the list of OSM tag values checked by the user. The tool makes
+        # the user supply at least one key.
         tag_key = parameters[0].value
         tag_values = parameters[1].value.exportToString().split(";")
 
-        # If the wildcard (*) option is selected, replace any other tag value that might be selected
+        # If the wildcard (*) option is selected, replace any other tag value
+        # that might be selected
         if "'* (any value, including the ones listed below)'" in tag_values:
             arcpy.AddMessage("\nCollecting " + tag_key + " = * (any value)")
-            nodeData = 'node["' + tag_key + '"]'
-            wayData = 'way["' + tag_key + '"]'
-            relationData = 'relation["' + tag_key + '"]'
+            node_data = 'node["' + tag_key + '"]'
+            way_data = 'way["' + tag_key + '"]'
+            relation_data = 'relation["' + tag_key + '"]'
         # Query only for one tag value
         elif len(tag_values) == 1:
             tag_value = tag_values[0]
             arcpy.AddMessage("\nCollecting " + tag_key + " = " + tag_value)
-            nodeData = 'node["' + tag_key + '"="' + tag_value + '"]'
-            wayData = 'way["' + tag_key + '"="' + tag_value + '"]'
-            relationData = 'relation["' + tag_key + '"="' + tag_value + '"]'
+            node_data = 'node["' + tag_key + '"="' + tag_value + '"]'
+            way_data = 'way["' + tag_key + '"="' + tag_value + '"]'
+            relation_data = 'relation["' + tag_key + '"="' + tag_value + '"]'
         # Query for a combination of tag values
         elif len(tag_values) > 1:
             tag_values = "|".join(tag_values)
             arcpy.AddMessage("\nCollecting " + tag_key + " = " + tag_values)
-            nodeData = 'node["' + tag_key + '"~"' + tag_values + '"]'
-            wayData = 'way["' + tag_key + '"~"' + tag_values + '"]'
-            relationData = 'relation["' + tag_key + '"~"' + tag_values + '"]'
+            node_data = 'node["' + tag_key + '"~"' + tag_values + '"]'
+            way_data = 'way["' + tag_key + '"~"' + tag_values + '"]'
+            relation_data = 'relation["' + tag_key + '"~"' + tag_values + '"]'
 
         query = (QUERY_START + QUERY_DATE + bbox_head +
-                 nodeData + bbox_data +
-                 wayData + bbox_data +
-                 relationData + bbox_data +
+                 node_data + bbox_data +
+                 way_data + bbox_data +
+                 relation_data + bbox_data +
                  QUERY_END)
 
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
         if response.status_code != 200:
-            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code))
+            arcpy.AddMessage("\tOverpass server response was %s" %
+                             response.status_code)
             return
         try:
             data = response.json()
@@ -533,7 +537,8 @@ class Tool(object):
             arcpy.AddMessage("\tNo data found!")
             return
         else:
-            arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
+            arcpy.AddMessage("\tCollected %s objects (incl. reverse objects)" %
+                             len(data["elements"]))
 
         FCs = Toolbox.fillFC(data, parameters[7].value)
         arcpy.AddMessage(FCs)
