@@ -211,6 +211,7 @@ class Toolbox(object):
             del polygon_fc_cursor
         return returnArray
 
+
     def set_spatial_reference(self, srs, transformation):
         """Given a Spatial Reference System string and (potentially) a
         transformation, create an arcpy.SpatialReference object and (if given)
@@ -223,6 +224,7 @@ class Toolbox(object):
         if transformation is not None:
             arcpy.env.geographicTransformations = transformation
         return spatial_reference
+
 
     def get_bounding_box(extent_indication_method, region_name, extent):
         """ Given a method for indicating the extent to be queried and either
