@@ -293,7 +293,10 @@ class Tool(object):
             direction="Input",
         )
         now = datetime.datetime.utcnow()
-        param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
+        try:
+            param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
+        except:
+            param7.value = now.strftime("%d/%m/%Y %H:%M:%S")
         param_out0 = arcpy.Parameter(
             displayName="Layer containing OSM point data",
             name="out_nodes",
