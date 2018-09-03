@@ -294,16 +294,15 @@ class Tool(object):
         """Load the configuration file and find either major OSM tag keys or
         suitable OSM tag values for a given key"""
         # Load JSON file with configuration info
-        json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
+        json_file = join(dirname(abspath(__file__)), 'config/tags.json')
         try:
-            with open(json_file_config) as f:
+            with open(json_file ) as f:
                 config_json = json.load(f)
         except IOError:
-            arcpy.AddError('Configuration file %s not found.' %
-                           json_file_config)
-        except IOError:
-            arcpy.AddError('Configuration file %s not found.' %
-                           json_file_config)
+            arcpy.AddError('Configuration file %s not found.' % json_file)
+        except ValueError:
+            arcpy.AddError('Configuration file %s is not valid JSON.' %
+                           json_file)
         # Compile a list of all major OSM tag keys
         if config_item == "all":
             return [key for key in config_json]
@@ -316,11 +315,15 @@ class Tool(object):
         """Load the configuration file and find Overpass API endpoints
         (this function is not in use yet)"""
         # Load JSON file with configuration info
-        json_file_config = join(dirname(abspath(__file__)),
-                                'config/servers.json')
-        if isfile(json_file_config):
-            with open(json_file_config) as f:
+        json_file = join(dirname(abspath(__file__)), 'config/servers.json')
+        try:
+            with open(json_file) as f:
                 config_json = json.load(f)
+        except IOError:
+            arcpy.AddError('Configuration file %s not found.' % json_file)
+        except ValueError:
+            arcpy.AddError('Configuration file %s is not valid JSON.' %
+                           json_file)
         return [server for server in config_json["overpass_servers"]]
 
 
