@@ -43,21 +43,25 @@ class Toolbox(object):
         fc_name = '%ss_%s' % (geometry_type, str(timestamp))
         fc = join(arcpy.env.scratchWorkspace, fc_name)
 
-        arcpy.AddMessage("\nCreating %s feature layer %s..." % (geometry_type.lower(), fc_name))
+        arcpy.AddMessage("\nCreating %s feature layer %s..." %
+                         (geometry_type.lower(), fc_name))
         if geometry_type == 'Line':
             geometry_type = 'Polyline'
-        arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace, fc_name, geometry_type.upper(), "",
-                                            "DISABLED",
-                                            "DISABLED", arcpy.SpatialReference(4326), "")
+        arcpy.CreateFeatureclass_management(arcpy.env.scratchWorkspace,
+                                            fc_name, geometry_type.upper(),
+                                            "", "DISABLED", "DISABLED",
+                                            arcpy.SpatialReference(4326), "")
         arcpy.AddMessage("\tAdding attribute OSM_ID...")
         arcpy.AddField_management(fc, "OSM_ID", "DOUBLE", 12, 0, "", "OSM_ID")
         arcpy.AddMessage("\tAdding attribute DATETIME...")
-        arcpy.AddField_management(fc, "DATETIME", "DATE", "", "", "", "DateTime")
+        arcpy.AddField_management(fc, "DATETIME", "DATE", "", "", "",
+                                  "DateTime")
         for field in fields:
             try:
                 field = field.replace(":", "")
                 arcpy.AddMessage("\tAdding attribute %s..." % field)
-                arcpy.AddField_management(fc, field, "STRING", 255, "", "", field, "NULLABLE")
+                arcpy.AddField_management(fc, field, "STRING", 255, "", "",
+                                          field, "NULLABLE")
             except arcpy.ExecuteError:
                 arcpy.AddMessage("\tAdding attribute %s failed.")
         return fc
@@ -70,14 +74,15 @@ class Toolbox(object):
         ###creating feature classes according to the response###
         ########################################################
 
-        points = [element for element in data['elements'] if element["type"] == "node"]
-        lines = [element for element in data['elements'] if element["type"] == "way" and
-                 (element["nodes"][0] != element["nodes"][len(element["nodes"]) - 1])]
-        polygons = [element for element in data['elements'] if element["type"] == "way" and
-                    (element["nodes"][0] == element["nodes"][len(element["nodes"]) - 1])]
+        points = [e for e in data['elements'] if e["type"] == "node"]
+        lines = [e for e in data['elements'] if e["type"] == "way" and
+                 (e["nodes"][0] != e["nodes"][len(e["nodes"])-1])]
+        polygons = [e for e in data['elements'] if e["type"] == "way" and
+                    (e["nodes"][0] == e["nodes"][len(e["nodes"])-1])]
 
-        # Iterate through elements per geometry type (points (nodes), lines (open ways; i.e. start and end node are not
-        # identical), polygons (closed ways) and collect attributes
+        # Iterate through elements per geometry type (points (nodes), lines
+        # (open ways; i.e. start and end node are not identical), polygons
+        # (closed ways) and collect their attributes
         point_fc_fields = set()
         line_fc_fields = set()
         polygon_fc_fields = set()
@@ -95,7 +100,8 @@ class Toolbox(object):
                 polygon_fc_fields.add(tag)
 
         if len(points) > 0:
-            point_fc = self.create_result_fc('Point', point_fc_fields, timestamp)
+            point_fc = self.create_result_fc('Point', point_fc_fields,
+                                             timestamp)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
             returnArray[0] = point_fc
         else:
@@ -109,7 +115,8 @@ class Toolbox(object):
             arcpy.AddMessage("\nData contains no line features.")
 
         if len(polygons) > 0:
-            polygon_fc = self.create_result_fc('Polygon', polygon_fc_fields, timestamp)
+            polygon_fc = self.create_result_fc('Polygon', polygon_fc_fields,
+                                               timestamp)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
             returnArray[2] = polygon_fc
         else:
@@ -186,8 +193,9 @@ class Toolbox(object):
         return returnArray
 
     def set_spatial_reference(self, srs, transformation):
-        """Given a Spatial Reference System string and (potentially) a transformation, create an arcpy.SpatialReference
-        object and (if given) set the geographic transformation environment setting."""
+        """Given a Spatial Reference System string and (potentially) a
+        transformation, create an arcpy.SpatialReference object and (if given)
+        set the geographic transformation in the environment settings."""
         if srs is not None:
             spatial_reference = arcpy.SpatialReference()
             spatial_reference.loadFromString(srs)
@@ -198,25 +206,31 @@ class Toolbox(object):
         return spatial_reference
 
     def get_bounding_box(extent_indication_method, region_name, extent):
-        """ Given a method for indicating the extent to be queried and either a region name or an extent object,
-        construct the string with extent information for querying the Overpass API"""
+        """ Given a method for indicating the extent to be queried and either
+        a region name or an extent object, construct the string with extent
+        information for querying the Overpass API"""
         if extent_indication_method == "Define a bounding box":
             if extent.spatialReference == arcpy.SpatialReference(4326):
-                # There is no reprojection necessary of the EPSG:4326 coordinates
-                bounding_box = [extent.YMin, extent.XMin, extent.YMax, extent.XMax]
+                # No reprojection necessary for EPSG:4326 coordinates
+                bounding_box = [extent.YMin, extent.XMin, extent.YMax,
+                                extent.XMax]
             else:
-                # The coordinates of the extent object need to be reprojected to EPSG:4326 for query building
+                # The coordinates of the extent object need to be reprojected
+                # to EPSG:4326 for query building
                 ll = arcpy.PointGeometry(arcpy.Point(extent.XMin, extent.YMin),
                                          extent.spatialReference).projectAs(arcpy.SpatialReference(4326))
                 ur = arcpy.PointGeometry(arcpy.Point(extent.XMax, extent.YMax),
                                          extent.spatialReference).projectAs(arcpy.SpatialReference(4326))
-                bounding_box = [ll.extent.YMin, ll.extent.XMin, ur.extent.YMax, ur.extent.XMax]
+                bounding_box = [ll.extent.YMin, ll.extent.XMin, ur.extent.YMax,
+                                ur.extent.XMax]
             return '', '(%s);' % ','.join(str(e) for e in bounding_box)
 
         elif extent_indication_method == "Geocode a region name":
             # Get an area ID from Nominatim geocoding service
-            nominatim_url = 'https://nominatim.openstreetmap.org/search?q=%s&format=json' % region_name
-            arcpy.AddMessage("\nGecoding region using Nominatim: %s..." % nominatim_url)
+            nominatim_url = 'https://nominatim.openstreetmap.org/search?q=' \
+                            '%s&format=json' % region_name
+            arcpy.AddMessage("\nGecoding region using Nominatim: %s..." %
+                             nominatim_url)
             nominatim_response = requests.get(nominatim_url)
             try:
                 nominatim_data = nominatim_response.json()
@@ -224,11 +238,14 @@ class Toolbox(object):
                     if result["osm_type"] == "relation":
                         nominatim_area_id = result['osm_id']
                         try:
-                            arcpy.AddMessage("\tFound region " + result['display_name'])
+                            arcpy.AddMessage("\tFound region %s" %
+                                             result['display_name'])
                         except:
-                            arcpy.AddMessage("\tFound region " + str(nominatim_area_id))
+                            arcpy.AddMessage("\tFound region %s" %
+                                             nominatim_area_id)
                         break
-                bounding_box_head = 'area(' + str(int(nominatim_area_id) + 3600000000) + ')->.searchArea;'
+                bounding_box_head = 'area(%s)->.searchArea;' % \
+                                    (int(nominatim_area_id) + 3600000000)
                 bounding_box_data = '(area.searchArea);'
                 return bounding_box_head, bounding_box_data
             except:
@@ -246,7 +263,8 @@ class Tool(object):
         self.canRunInBackground = False
 
     def get_config(self, config_item):
-        """Load the configuration file and find either major OSM tag keys or suitable OSM tag values for a given key"""
+        """Load the configuration file and find either major OSM tag keys or
+        suitable OSM tag values for a given key"""
         # Load JSON file with configuration info
         json_file_config = join(dirname(abspath(__file__)), 'config/tags.json')
         if isfile(json_file_config):
@@ -261,9 +279,11 @@ class Tool(object):
 
 
     def get_servers(self):
-        """Load the configuration file and find Overpass API endpoints (this function is not in use yet)"""
+        """Load the configuration file and find Overpass API endpoints
+        (this function is not in use yet)"""
         # Load JSON file with configuration info
-        json_file_config = join(dirname(abspath(__file__)), 'config/servers.json')
+        json_file_config = join(dirname(abspath(__file__)),
+                                'config/servers.json')
         if isfile(json_file_config):
             with open(json_file_config) as f:
                 config_json = json.load(f)
@@ -313,7 +333,8 @@ class Tool(object):
                 name="in_crs",
                 datatype="GPCoordinateSystem",
                 parameterType="Optional",
-                category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
+                category="Adjust the CRS of the result data - default is "
+                         "EPSG:4326 (WGS 1984):",
                 direction="Input")
         param5.value = arcpy.SpatialReference(4326)
         param6 = arcpy.Parameter(
@@ -321,7 +342,8 @@ class Tool(object):
                 name="in_transformation",
                 datatype="GPString",
                 parameterType="Optional",
-                category="Adjust the CRS of the result data - default is EPSG:4326 (WGS 1984):",
+                category="Adjust the CRS of the result data - default is "
+                         "EPSG:4326 (WGS 1984):",
                 direction="Input",
                 enabled=False)
         param7 = arcpy.Parameter(
@@ -354,7 +376,8 @@ class Tool(object):
                 parameterType="Derived",
                 direction="Output")
 
-        return [param0, param1, param2, param3, param4, param5, param6, param7, param_out0, param_out1, param_out2]
+        return [param0, param1, param2, param3, param4, param5, param6,
+                param7, param_out0, param_out1, param_out2]
 
 
     def isLicensed(self):
@@ -370,8 +393,9 @@ class Tool(object):
         # Update the parameters of keys accroding the values of "in_tag"
         parameters[1].filter.list = self.get_config(parameters[0].value)
 
-        # Switch the availability of the 'region name' parameter and the 'extent'
-        # parameter depending on which extent indication method is selected
+        # Switch the availability of the 'region name' parameter and the
+        # 'extent' parameter depending on which extent indication method is
+        # selected
         if parameters[2].value == "Geocode a region name":
             parameters[3].enabled = True
             parameters[4].enabled = False
@@ -381,12 +405,15 @@ class Tool(object):
 
         if parameters[5].value is not None:
             target_sr = arcpy.SpatialReference()
-            sr_string = str(parameters[5].value)
-            target_sr.loadFromString(sr_string)
-            # If necessary, find candidate transformations between EPSG:4326 and <target_sr>
+            # sr_string = str(parameters[5].value)
+            target_sr.loadFromString(parameters[5].value.exportToString())
+            # If necessary, find candidate transformations between EPSG:4326
+            # and <target_sr> and offer them in the dropdown menu
             if target_sr.factoryCode != 4326:
                 parameters[6].enabled = True
-                parameters[6].filter.list = arcpy.ListTransformations(arcpy.SpatialReference(4326), target_sr)
+                parameters[6].filter.list = \
+                    arcpy.ListTransformations(arcpy.SpatialReference(4326),
+                                              target_sr)
                 parameters[6].value = parameters[6].filter.list[0]
             if target_sr.factoryCode == 4326:
                 parameters[6].enabled = False
@@ -394,11 +421,12 @@ class Tool(object):
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        # if only time is selected, year will be autofilled with "1899"
+        parameter. This method is called after internal validation."""
+        # If only time is selected, year will be autofilled with "1899"
         if parameters[7].value.year < 2004:
-            parameters[7].setWarningMessage(
-                "No or invalid date provided! Date must be greater than 9th of August 2004!")
+            parameters[7].setWarningMessage("No or invalid date provided! "
+                                            "Date must be greater than 9th "
+                                            "of August 2004!")
         return
 
     def execute(self, parameters, messages):
