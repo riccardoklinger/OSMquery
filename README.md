@@ -8,7 +8,11 @@ The OSMQuery toolbox comes with two tools:
 
 What OSMQuery looks like in ArcMap:
 
-![OSMQuery in ArcMap](https://github.com/riccardoklinger/OSMquery/blob/master/docs/OSMQuery-in-ArcMap.png)
+![OSMQuery Toolbox structure in ArcMap](https://github.com/riccardoklinger/OSMquery/blob/master/docs/OSMQuery-in-ArcMap.png)
+
+What the *Get OSM Data* tool of OSMQuery looks like in ArcMap:
+
+![Get OSM Data tool GUI in ArcMap](https://github.com/riccardoklinger/OSMquery/blob/master/docs/OSMQuery-GUI-in-ArcMap.png)
 
 ## Installation
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
