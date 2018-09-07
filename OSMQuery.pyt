@@ -25,7 +25,7 @@ import requests
 import json
 import time
 import datetime
-from os.path import dirname, join, abspath, isfile
+from os.path import dirname, join, abspath
 
 # Constants for building the query to the Overpass API
 QUERY_URL = "http://overpass-api.de/api/interpreter"
