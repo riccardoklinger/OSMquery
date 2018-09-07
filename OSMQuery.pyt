@@ -27,6 +27,11 @@ import time
 import datetime
 from os.path import dirname, join, abspath, isfile
 
+# Constants for building the query to the Overpass API
+QUERY_URL = "http://overpass-api.de/api/interpreter"
+QUERY_START = "[out:json][timeout:25]"
+QUERY_DATE = '[date:"timestamp"];('
+QUERY_END = ');(._;>;);out;>;'
 
 class Toolbox(object):
     def __init__(self):
@@ -469,12 +474,10 @@ class GetOSMDataSimple(object):
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
 
-        # Constants for building the query to the Overpass API
-        QUERY_URL = "http://overpass-api.de/api/interpreter"
-        QUERY_START = "[out:json][timeout:25]"
-        QUERY_DATE = '[date:"%s"];(' % \
-                     parameters[7].value.strftime("%Y-%m-%dT%H:%M:%SZ")
-        QUERY_END = ');(._;>;);out;>;'
+        query_date = QUERY_DATE.replace("timestamp",
+                                        parameters[7].value.strftime("%Y-%m-%d"
+                                                                     "T%H:%M:"
+                                                                     "%SZ"))
 
         # Create the spatial reference and set the geographic transformation
         # in the environment settings (if given)
@@ -514,7 +517,7 @@ class GetOSMDataSimple(object):
             way_data = 'way["' + tag_key + '"~"' + tag_values + '"]'
             relation_data = 'relation["' + tag_key + '"~"' + tag_values + '"]'
 
-        query = (QUERY_START + QUERY_DATE + bbox_head +
+        query = (QUERY_START + query_date + bbox_head +
                  node_data + bbox_data +
                  way_data + bbox_data +
                  relation_data + bbox_data +
@@ -623,12 +626,12 @@ class GetOSMDataExpert(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         # Get data using urllib
-        QUERY_URL = "http://overpass-api.de/api/interpreter"
 
-        QUERY_START = "[out:json][timeout:25]"
-        QUERY_DATE = '[date:"' + parameters[1].value.strftime("%Y-%m-%dT%H:%M:%SZ") + '"];('
-        QUERY_END = ');(._;>;);out;>;'
-        query = QUERY_START + QUERY_DATE + parameters[0].valueAsText + QUERY_END
+        query_date = QUERY_DATE.replace("timestamp",
+                                        parameters[1].value.strftime("%Y-%m-%d"
+                                                                     "T%H:%M:"
+                                                                     "%SZ"))
+        query = QUERY_START + query_date + parameters[0].valueAsText + QUERY_END
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
