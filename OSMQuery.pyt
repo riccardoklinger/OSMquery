@@ -317,10 +317,10 @@ class GetOSMDataSimple(object):
                            json_file)
         # Compile a list of all major OSM tag keys
         if config_item == "all":
-            return [key for key in config_json]
+            return sorted([key for key in config_json])
         # Compile a list of all major OSM tag values for the given OSM tag key
         else:
-            return [value for value in config_json[config_item]]
+            return sorted([value for value in config_json[config_item]])
 
     def get_servers(self):
         """Load the configuration file and find Overpass API endpoints
