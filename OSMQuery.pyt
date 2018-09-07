@@ -33,6 +33,11 @@ QUERY_START = "[out:json][timeout:25]"
 QUERY_DATE = '[date:"timestamp"];('
 QUERY_END = ');(._;>;);out;>;'
 
+# Set some environment settings
+arcpy.env.overwriteOutput = True
+arcpy.env.addOutputsToMap = True
+
+
 class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
@@ -470,10 +475,6 @@ class GetOSMDataSimple(object):
     def execute(self, parameters, messages):
         """The code that is run, when the ArcGIS tool is run."""
 
-        # Set some environment settings
-        arcpy.env.overwriteOutput = True
-        arcpy.env.addOutputsToMap = True
-
         query_date = QUERY_DATE.replace("timestamp",
                                         parameters[7].value.strftime("%Y-%m-%d"
                                                                      "T%H:%M:"
@@ -540,8 +541,8 @@ class GetOSMDataSimple(object):
             arcpy.AddMessage("\tNo data found!")
             return
         else:
-            arcpy.AddMessage("\tCollected %s objects (incl. reverse objects)" %
-                             len(data["elements"]))
+            arcpy.AddMessage("\tCollected %s objects (including reverse "
+                             "objects)" % len(data["elements"]))
 
         result_fcs = Toolbox.fill_feature_classes(data, parameters[7].value)
         if result_fcs[0]:
@@ -648,9 +649,7 @@ class GetOSMDataExpert(object):
             return
         else:
             arcpy.AddMessage("\nData contains no polygon features.")
-        arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
-        arcpy.env.overwriteOutput = True
-        arcpy.env.addOutputsToMap = True
+        arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (including reverse objects)")
 
         result_fcs = Toolbox.fill_feature_classes(data, parameters[1].value)
         if result_fcs[0]:
