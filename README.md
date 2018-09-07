@@ -29,7 +29,7 @@ Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will add all tags t
 ### Defining an Area of Interest
 For defining the spatial extent of your query you can use two options: You can either enter a region name (which will be geocoded using the OSM-based geocoding service [Nominatim](https://nominatim.openstreetmap.org/search)) or you can define a bounding box using the standard ArcGIS Pro or ArcMap options, e.g. manually specifying coordinates, using the extent of a layer or the option *Same as Display*.
 
-### Querying OSM for a Specific Dater
+### Querying OSM for a Specific Date
 Using the appropriate parameter you can set a reference date and time (the default is the current time). Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will query OSM for the specified point in time and will only yield features that were part of OSM then. The reference date and time is given in [UTC (Cordinated Universal Time)](https://en.wikipedia.org/wiki/Coordinated_Universal_Time). 
 
 ### Obtaining the Resulting Data
