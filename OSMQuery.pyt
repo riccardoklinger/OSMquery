@@ -93,7 +93,6 @@ class Toolbox(object):
                 polygon_fc_fields.add(tag)
         return point_fc_fields, line_fc_fields, polygon_fc_fields
 
-
     @classmethod
     def fillFC(cls, data, requesttime):
         returnArray = [None, None, None]
@@ -218,8 +217,8 @@ class Toolbox(object):
             del polygon_fc_cursor
         return returnArray
 
-
-    def set_spatial_reference(self, srs, transformation):
+    @classmethod
+    def set_spatial_reference(cls, srs, transformation):
         """Given a Spatial Reference System string and (potentially) a
         transformation, create an arcpy.SpatialReference object and (if given)
         set the geographic transformation in the environment settings."""
@@ -232,8 +231,8 @@ class Toolbox(object):
             arcpy.env.geographicTransformations = transformation
         return spatial_reference
 
-
-    def get_bounding_box(extent_indication_method, region_name, extent):
+    @classmethod
+    def get_bounding_box(cls, extent_indication_method, region_name, extent):
         """ Given a method for indicating the extent to be queried and either
         a region name or an extent object, construct the string with extent
         information for querying the Overpass API"""
@@ -483,9 +482,9 @@ class Tool(object):
 
         # Get the bounding box-related parts of the Overpass API query, using
         # the indicated extent or by geocoding a region name given by the user
-        bbox_head, bbox_data = get_bounding_box(parameters[2].value,
-                                                parameters[3].value,
-                                                parameters[4].value)
+        bbox_head, bbox_data = Toolbox.get_bounding_box(parameters[2].value,
+                                                        parameters[3].value,
+                                                        parameters[4].value)
 
         # Get the list of OSM tag values checked by the user. The tool makes
         # the user supply at least one key.
