@@ -29,11 +29,11 @@ Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will add all tags t
 ### Defining an Area of Interest
 For defining the spatial extent of your query you can use two options: You can either enter a region name (which will be geocoded using the OSM-based geocoding service [Nominatim](https://nominatim.openstreetmap.org/search)) or you can define a bounding box using the standard ArcGIS Pro or ArcMap options, e.g. manually specifying coordinates, using the extent of a layer or the option *Same as Display*.
 
-### Querying OSM for a Specific Date
+### Defining a Date and Time of Interest
 Using the appropriate parameter you can set a reference date and time (the default is the current time). Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will query OSM for the specified point in time and will only yield features that were part of OSM then. The reference date and time is given in [UTC (Cordinated Universal Time)](https://en.wikipedia.org/wiki/Coordinated_Universal_Time). 
 
-### Obtaining the Resulting Data
-After any of the two tools has run successfully, the results will be drawn on the map in up to three feature layers (one each for point features, line features, and polygon features) and the respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`).
+### Working with the Resulting Data
+After any of the two tools has run successfully, the results will be drawn on the map in up to three timestamped feature layers (one each for point features, line features, and polygon features). The respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`). If you want to persist the results, you can export the feature layers from the table of contents of ArcGIS Pro or ArcMap (or directly from your Scratch Workspace) into new feature classes in a destination of your choosing.
 
 ![results in ArcGIS Pro](https://i.imgur.com/uEyxD2H.png)
 
