@@ -36,7 +36,7 @@ class Toolbox(object):
         self.alias = "OSMQueryToolbox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [Tool, OverpassTool]
+        self.tools = [GetOSMDataSimple, GetOSMDataExpert]
 
     @classmethod
     def create_result_fc(cls, geometry_type, fields, timestamp):
@@ -282,11 +282,12 @@ class Toolbox(object):
             raise ValueError
 
 
-class Tool(object):
+class GetOSMDataSimple(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Get OSM Data"
-        self.description = ""
+        self.description = "Get OpenStreetMap data using relatively simple, " \
+                           "pre-formulated queries to the Overpass API"
         self.canRunInBackground = False
 
     def get_config(self, config_item):
@@ -550,11 +551,12 @@ class Tool(object):
         return
 
 
-class OverpassTool(object):
+class GetOSMDataExpert(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Custom Overpass Query"
-        self.description = ""
+        self.label = "Get OSM Data (Expert Tool)"
+        self.description = "Get OpenStreetMap data using fully customizable " \
+                           "queries to the Overpass API"
         self.canRunInBackground = False
 
     def getParameterInfo(self):
