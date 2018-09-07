@@ -255,9 +255,11 @@ class Toolbox(object):
                 # The coordinates of the extent object need to be reprojected
                 # to EPSG:4326 for query building
                 ll = arcpy.PointGeometry(arcpy.Point(extent.XMin, extent.YMin),
-                                         extent.spatialReference).projectAs(arcpy.SpatialReference(4326))
+                                         extent.spatialReference).projectAs(
+                        arcpy.SpatialReference(4326))
                 ur = arcpy.PointGeometry(arcpy.Point(extent.XMax, extent.YMax),
-                                         extent.spatialReference).projectAs(arcpy.SpatialReference(4326))
+                                         extent.spatialReference).projectAs(
+                        arcpy.SpatialReference(4326))
                 bounding_box = [ll.extent.YMin, ll.extent.XMin, ur.extent.YMax,
                                 ur.extent.XMax]
             return '', '(%s);' % ','.join(str(e) for e in bounding_box)
@@ -631,12 +633,14 @@ class GetOSMDataExpert(object):
                                         parameters[1].value.strftime("%Y-%m-%d"
                                                                      "T%H:%M:"
                                                                      "%SZ"))
-        query = QUERY_START + query_date + parameters[0].valueAsText + QUERY_END
+        query = (QUERY_START + query_date + parameters[0].valueAsText +
+                 QUERY_END)
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
         response = requests.get(QUERY_URL, params={'data': query})
         if response.status_code != 200:
-            arcpy.AddMessage("\tOverpass server response was " + str(response.status_code))
+            arcpy.AddMessage("\tOverpass server response was %s" %
+                             response.status_code)
             return
         try:
             data = response.json()
@@ -649,7 +653,8 @@ class GetOSMDataExpert(object):
             return
         else:
             arcpy.AddMessage("\nData contains no polygon features.")
-        arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (including reverse objects)")
+        arcpy.AddMessage("\tCollected %s objects (including reverse objects)" %
+                         len(data["elements"]))
 
         result_fcs = Toolbox.fill_feature_classes(data, parameters[1].value)
         if result_fcs[0]:
