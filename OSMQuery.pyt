@@ -400,10 +400,8 @@ class GetOSMDataSimple(object):
                 parameterType="Optional",
                 direction="Input")
         now = datetime.datetime.utcnow()
-        try:
-            param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
-        except:
-            param7.value = now.strftime("%d/%m/%Y %H:%M:%S")
+        param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
+
         param_out0 = arcpy.Parameter(
                 displayName="Layer containing OSM point data",
                 name="out_nodes",
