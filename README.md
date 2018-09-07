@@ -2,7 +2,7 @@
 OSMQuery is a Python Toolbox for making getting OSM data into the Esri ecosystem easier. With OSMQuery, you can query an area of interest for OSM data (of specified kind) and obtain feature layers of the results, with point, line and/or area features depending on what kind of data OSM holds for your area. This toolbox works both in ArcGIS Pro and in ArcGIS Desktop 10.x.
 
 ## Contents and Usage
-The OSMQ toolbox comes with two tools:
+The OSMQuery toolbox comes with two tools:
 - `Get OSM Data`: With this tool, you can query pre-defined (frequent) combinations of OSM tag keys (e.g. `amenity`) and OSM tag values (e.g. `atm`, `bench` or `fountain`) and obtain the results as feature layers. For a given OSM tag key, you can query several OSM tag values at once. Or you can even use the wildcard operator (*) in order to get feature with *any* value for the chosen OSM tag key.  
 - `Get OSM Data (Expert Tool)`: With this tool, you can formulate your own queries and obtain the results as feature layers. Behind the scenes, the tool uses the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API). Thus, your query syntax has to be compliant with the [Overpass API Language](https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide).
 
