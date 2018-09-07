@@ -438,8 +438,8 @@ class GetOSMDataSimple(object):
 
         if parameters[5].value is not None:
             target_sr = arcpy.SpatialReference()
-            # sr_string = str(parameters[5].value)
-            target_sr.loadFromString(parameters[5].value.exportToString())
+            # target_sr.loadFromString(parameters[5].value).exportToString())
+            target_sr.loadFromString(parameters[5].value)
             # If necessary, find candidate transformations between EPSG:4326
             # and <target_sr> and offer them in the dropdown menu
             if target_sr.factoryCode != 4326:
