@@ -3,8 +3,11 @@ OSMQuery is a [Python Toolbox](https://pro.arcgis.com/en/pro-app/arcpy/geoproces
 
 ## Contents and Usage
 The OSMQuery toolbox comes with two tools:
-- `Get OSM Data`: With this tool, you can query pre-defined (frequent) combinations of OSM tag keys (e.g. `amenity`) and OSM tag values (e.g. `atm`, `bench` or `fountain`) and obtain the results as feature layers. For a given OSM tag key, you can query several OSM tag values at once. Or you can even use the wildcard operator (*) in order to get feature with *any* value for the chosen OSM tag key.  
-- `Get OSM Data (Expert Tool)`: With this tool, you can formulate your own queries and obtain the results as feature layers. Behind the scenes, the tool uses the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API). Thus, your query syntax has to be compliant with the [Overpass API Language](https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide).
+- **Get OSM Data**: With this tool, you can query pre-defined (frequent) combinations of OSM tag keys (e.g. `amenity`) and OSM tag values (e.g. `atm`, `bench` or `fountain`) and obtain the results as feature layers. For a given OSM tag key, you can query several OSM tag values at once. Or you can even use the wildcard operator (*) in order to get feature with *any* value for the chosen OSM tag key.  
+- **Get OSM Data (Expert Tool)**: With this tool, you can formulate your own queries and obtain the results as feature layers. Behind the scenes, the tool uses the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API). Thus, your query syntax has to be compliant with the [Overpass API Language](https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide).
+
+What OSMQuery looks like in ArcMap:
+
 
 ## Installation
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
