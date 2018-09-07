@@ -99,8 +99,8 @@ class Toolbox(object):
         return point_fc_fields, line_fc_fields, polygon_fc_fields
 
     @classmethod
-    def fillFC(cls, data, requesttime):
-        returnArray = [None, None, None]
+    def fill_feature_classes(cls, data, requesttime):
+        fcs = [None, None, None]
 
         # ------------------------------------------------------
         # Creating feature classes according to the response
@@ -123,7 +123,7 @@ class Toolbox(object):
             point_fc = Toolbox.create_result_fc('Point', point_fc_fields,
                                                 timestamp)
             point_fc_cursor = arcpy.InsertCursor(point_fc)
-            returnArray[0] = point_fc
+            fcs[0] = point_fc
         else:
             arcpy.AddMessage("\nData contains no point features.")
 
@@ -131,7 +131,7 @@ class Toolbox(object):
             line_fc = Toolbox.create_result_fc('Line', line_fc_fields,
                                                timestamp)
             line_fc_cursor = arcpy.InsertCursor(line_fc)
-            returnArray[1] = line_fc
+            fcs[1] = line_fc
         else:
             arcpy.AddMessage("\nData contains no line features.")
 
@@ -139,7 +139,7 @@ class Toolbox(object):
             polygon_fc = Toolbox.create_result_fc('Polygon', polygon_fc_fields,
                                                timestamp)
             polygon_fc_cursor = arcpy.InsertCursor(polygon_fc)
-            returnArray[2] = polygon_fc
+            fcs[2] = polygon_fc
         else:
             arcpy.AddMessage("\nData contains no polygon features.")
 
@@ -214,13 +214,13 @@ class Toolbox(object):
             except:
                 arcpy.AddWarning("OSM element %s could not be written to FC" %
                                  element["id"])
-        if returnArray[0]:
+        if fcs[0]:
             del point_fc_cursor
-        if returnArray[1]:
+        if fcs[1]:
             del line_fc_cursor
-        if returnArray[2]:
+        if fcs[2]:
             del polygon_fc_cursor
-        return returnArray
+        return fcs
 
     @classmethod
     def set_spatial_reference(cls, srs, transformation):
@@ -543,14 +543,13 @@ class GetOSMDataSimple(object):
             arcpy.AddMessage("\tCollected %s objects (incl. reverse objects)" %
                              len(data["elements"]))
 
-        FCs = Toolbox.fillFC(data, parameters[7].value)
-        arcpy.AddMessage(FCs)
-        if FCs[0]:
-            parameters[8].value = FCs[0]
-        if FCs[1]:
-            parameters[9].value = FCs[1]
-        if FCs[2]:
-            parameters[10].value = FCs[2]
+        result_fcs = Toolbox.fill_feature_classes(data, parameters[7].value)
+        if result_fcs[0]:
+            parameters[8].value = result_fcs[0]
+        if result_fcs[1]:
+            parameters[9].value = result_fcs[1]
+        if result_fcs[2]:
+            parameters[10].value = result_fcs[2]
         return
 
 
@@ -652,12 +651,12 @@ class GetOSMDataExpert(object):
         arcpy.AddMessage("\tCollected " + str(len(data["elements"])) + " objects (incl. reverse objects)")
         arcpy.env.overwriteOutput = True
         arcpy.env.addOutputsToMap = True
-        FCs = Toolbox.fillFC(data, parameters[1].value)
 
-        if FCs[0]:
-            parameters[2].value = FCs[0]
-        if FCs[1]:
-            parameters[3].value = FCs[1]
-        if FCs[2]:
-            parameters[4].value = FCs[2]
+        result_fcs = Toolbox.fill_feature_classes(data, parameters[1].value)
+        if result_fcs[0]:
+            parameters[2].value = result_fcs[0]
+        if result_fcs[1]:
+            parameters[3].value = result_fcs[1]
+        if result_fcs[2]:
+            parameters[4].value = result_fcs[2]
         return
