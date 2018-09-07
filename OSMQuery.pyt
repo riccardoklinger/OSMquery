@@ -8,7 +8,7 @@
         begin                : 2018-08-20
         copyright            : (C) 2018 by Riccardo Klinger
         email                : riccardo.klinger at gmail dot com
-        contributor          : Riccardo Klinger
+        contributors         : Riccardo Klinger, Ralph Straumann, Michael Marz
  ***************************************************************************/
 /***************************************************************************
  *                                                                         *
