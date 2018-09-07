@@ -7,7 +7,7 @@ The OSMQuery toolbox comes with two tools:
 - **Get OSM Data (Expert Tool)**: With this tool, you can formulate your own queries and obtain the results as feature layers. Behind the scenes, the tool uses the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API). Thus, your query syntax has to be compliant with the [Overpass API Language](https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide).
 
 What OSMQuery looks like in ArcMap:
-
+![OSMQuery in ArcMap](docs/OSMQuery-in-ArcMap.png)
 
 ## Installation
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
