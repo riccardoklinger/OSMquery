@@ -1,5 +1,5 @@
 # OSMQuery
-OSMQuery is a [Python Toolbox](https://pro.arcgis.com/en/pro-app/arcpy/geoprocessing_and_python/a-quick-tour-of-python-toolboxes.htm) for making it easy (easier) to get OSM data into the Esri ecosystem. With OSMQuery, you can query an area of interest for OSM data (of specified kind) and obtain feature layers of the results, with point, line and/or area features depending on what kind of data OSM holds for your area. This toolbox works both in ArcGIS Pro and in ArcGIS Desktop 10.x.
+OSMQuery is a [Python Toolbox](https://pro.arcgis.com/en/pro-app/arcpy/geoprocessing_and_python/a-quick-tour-of-python-toolboxes.htm) for making it easy (easier) to get data out of [OpenStreetMap (OSM)](https://wiki.openstreetmap.org) and into the Esri ecosystem. With OSMQuery, you can query an area of interest for OSM data (of specified kind) and obtain feature layers of the results, with point, line and/or area features depending on what kind of data OSM holds for your area. This toolbox works both in ArcGIS Pro and in ArcGIS Desktop 10.x.
 
 ## Contents and Usage
 The OSMQuery toolbox comes with two tools:
