@@ -97,7 +97,7 @@ class Toolbox(object):
         return fc_fields
 
     @classmethod
-    def fill_feature_classes(cls, data, requesttime):
+    def fill_feature_classes(cls, data, request_time):
         fcs = [None, None, None]
 
         # ------------------------------------------------------
@@ -157,7 +157,7 @@ class Toolbox(object):
                                             arcpy.SpatialReference(4326))
                     row.setValue("SHAPE", point_geometry)
                     row.setValue("OSM_ID", element["id"])
-                    row.setValue("DATETIME", requesttime)
+                    row.setValue("DATETIME", request_time)
                     for tag in element["tags"]:
                         try:
                             row.setValue(tag.replace(":", ""),
@@ -183,7 +183,7 @@ class Toolbox(object):
                         pointArray = arcpy.Array(node_geometry)
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
-                        row.setValue("DATETIME", requesttime)
+                        row.setValue("DATETIME", request_time)
                         # Now deal with the way tags:
                         if "tags" in element:
                             for tag in element["tags"]:
@@ -199,7 +199,7 @@ class Toolbox(object):
                         pointArray = arcpy.Array(node_geometry)
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
-                        row.setValue("DATETIME", requesttime)
+                        row.setValue("DATETIME", request_time)
                         # now deal with the way tags:
                         if "tags" in element:
                             for tag in element["tags"]:
