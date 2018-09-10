@@ -464,10 +464,11 @@ class GetOSMDataSimple(object):
         """Modify the messages created by internal validation for each tool
         parameter. This method is called after internal validation."""
         # If only time is selected, year will be autofilled with "1899"
-        if params[7].value.year < 2004:
-            params[7].setWarningMessage("No or invalid date provided! Date "
-                                        "must be greater than 9th of August "
-                                        "2004!")
+        earliest_date = datetime.datetime(2004, 8, 9, 0, 0)
+        if params[7].value < earliest_date:
+            params[7].setWarningMessage("No or invalid date provided. The date "
+                                        "to be queried must be 2004-08-09 (9 "
+                                        "August 2004) or later.")
         return
 
     def execute(self, params, messages):
