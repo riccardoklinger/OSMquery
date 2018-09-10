@@ -43,5 +43,8 @@ Both tools in this toolbox rely on the [OSM Overpass API](https://wiki.openstree
 ## Contributors
 The idea for OSMQuery was conceived and first implementations were done by [Riccardo Klinger](https://github.com/riccardoklinger) of [Esri Germany](https://www.esri.de), further contributions by [Ralph Straumann](https://github.com/rastrau) of [EBP](https://www.ebp.ch/en) and [michaelmgis](https://github.com/michaelmgis). Help us improve OSMQuery by [testing, filing bug reports, feature requests or ideas](https://github.com/riccardoklinger/OSMquery/issues). Thank you!
 
+## License
+OSMQuery is licensed under the GNU General Public License (GPL), see [LICENSE](https://github.com/riccardoklinger/OSMquery/blob/master/LICENSE).
+
 ## Credits 
 This tool relies on the [OSM Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) which is licensed under the [GNU Affero GPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html). All OSM data you obtain through this tool are, of course, [&copy; OSM contributors](https://www.openstreetmap.org/copyright).
