@@ -466,9 +466,9 @@ class GetOSMDataSimple(object):
         # If only time is selected, year will be autofilled with "1899"
         earliest_date = datetime.datetime(2004, 8, 9, 0, 0)
         if params[7].value < earliest_date:
-            params[7].setWarningMessage("No or invalid date provided. The date "
-                                        "to be queried must be 2004-08-09 (9 "
-                                        "August 2004) or later.")
+            params[7].setWarningMessage("No or invalid date provided. The "
+                                        "date to be queried must be "
+                                        "2004-08-09 (9 August 2004) or later.")
         return
 
     def execute(self, params, messages):
