@@ -88,20 +88,12 @@ class Toolbox(object):
         return points, lines, polygons
 
     @classmethod
-    def get_attributes_from_features(cls, points, lines, polygons):
-        point_fc_fields = set()
-        line_fc_fields = set()
-        polygon_fc_fields = set()
-        for element in [e for e in points if "tags" in e]:
+    def get_attributes_from_features(cls, features):
+        fc_fields = set()
+        for element in [e for e in features if "tags" in e]:
             for tag in element["tags"]:
-                point_fc_fields.add(tag)
-        for element in [e for e in lines if "tags" in e]:
-            for tag in element["tags"]:
-                line_fc_fields.add(tag)
-        for element in [e for e in polygons if "tags" in e]:
-            for tag in element["tags"]:
-                polygon_fc_fields.add(tag)
-        return point_fc_fields, line_fc_fields, polygon_fc_fields
+                fc_fields.add(tag)
+        return fc_fields
 
     @classmethod
     def fill_feature_classes(cls, data, requesttime):
@@ -118,8 +110,9 @@ class Toolbox(object):
 
         # Per geometry type, gather all atributes present in the data
         # through elements per geometry type and collect their attributes
-        point_fc_fields, line_fc_fields, polygon_fc_fields = \
-            Toolbox.get_attributes_from_features(points, lines, polygons)
+        point_fc_fields = Toolbox.get_attributes_from_features(points)
+        line_fc_fields = Toolbox.get_attributes_from_features(lines)
+        polygon_fc_fields = Toolbox.get_attributes_from_features(polygons)
 
         # Per geometry type, create a feature class if there are features in
         # the data
