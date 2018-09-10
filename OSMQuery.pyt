@@ -399,8 +399,7 @@ class GetOSMDataSimple(object):
                 datatype="GPDate",
                 parameterType="Optional",
                 direction="Input")
-        now = datetime.datetime.utcnow()
-        param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
+        param7.value = datetime.datetime.utcnow()
 
         param_out0 = arcpy.Parameter(
                 displayName="Layer containing OSM point data",
