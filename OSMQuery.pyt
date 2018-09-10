@@ -72,8 +72,9 @@ class Toolbox(object):
                 arcpy.AddMessage("\tAdding attribute %s..." % field)
                 arcpy.AddField_management(fc, field, "STRING", 255, "", "",
                                           field, "NULLABLE")
-            except arcpy.ExecuteError:
-                arcpy.AddMessage("\tAdding attribute %s failed.")
+            except arcpy.ExecuteError as error:
+                arcpy.AddError(error)
+                arcpy.AddError("\tAdding attribute %s failed.")
         return fc
 
     @classmethod
