@@ -14,10 +14,21 @@ What the *Get OSM Data* tool of OSMQuery looks like in ArcMap:
 
 ![Get OSM Data tool GUI in ArcMap](https://github.com/riccardoklinger/OSMquery/blob/master/docs/OSMQuery-GUI-in-ArcMap.png)
 
+And in ArcGIS Pro:
+
+![Toolbox in ArcGIS Pro](https://i.imgur.com/2rXKySa.png)
+
 ## Installation
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
 
-![Toolbox in ArcGIS Pro](https://i.imgur.com/2rXKySa.png)
+## Prerequisites
+Apart from the core Python modules `datetime`, `json`, `time` and `os`, OSMQuery requires `arcpy` (of course) and `requests` to be installed. Depending on your Python version and environment you may or may not have `requests` installed already. You can test this, for example, by opening a Windows command prompt, starting Python (type `python`) and entering `import requests`. If your command prompt looks like this:
+
+`>>> import requests`
+
+`>>>`
+
+you're all set. If an import error is displayed, you have to [install the Python `requests` module](http://docs.python-requests.org/en/master/user/install/) before using OSMQuery.
 
 ## More Details on Usage 
 ### Querying OSM Tags
