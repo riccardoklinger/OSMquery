@@ -72,8 +72,9 @@ class Toolbox(object):
                 arcpy.AddMessage("\tAdding attribute %s..." % field)
                 arcpy.AddField_management(fc, field, "STRING", 255, "", "",
                                           field, "NULLABLE")
-            except arcpy.ExecuteError:
-                arcpy.AddMessage("\tAdding attribute %s failed.")
+            except arcpy.ExecuteError as error:
+                arcpy.AddError(error)
+                arcpy.AddError("\tAdding attribute %s failed.")
         return fc
 
     @classmethod
@@ -88,23 +89,15 @@ class Toolbox(object):
         return points, lines, polygons
 
     @classmethod
-    def get_attributes_from_features(cls, points, lines, polygons):
-        point_fc_fields = set()
-        line_fc_fields = set()
-        polygon_fc_fields = set()
-        for element in [e for e in points if "tags" in e]:
+    def get_attributes_from_features(cls, features):
+        fc_fields = set()
+        for element in [e for e in features if "tags" in e]:
             for tag in element["tags"]:
-                point_fc_fields.add(tag)
-        for element in [e for e in lines if "tags" in e]:
-            for tag in element["tags"]:
-                line_fc_fields.add(tag)
-        for element in [e for e in polygons if "tags" in e]:
-            for tag in element["tags"]:
-                polygon_fc_fields.add(tag)
-        return point_fc_fields, line_fc_fields, polygon_fc_fields
+                fc_fields.add(tag)
+        return fc_fields
 
     @classmethod
-    def fill_feature_classes(cls, data, requesttime):
+    def fill_feature_classes(cls, data, request_time):
         fcs = [None, None, None]
 
         # ------------------------------------------------------
@@ -118,8 +111,9 @@ class Toolbox(object):
 
         # Per geometry type, gather all atributes present in the data
         # through elements per geometry type and collect their attributes
-        point_fc_fields, line_fc_fields, polygon_fc_fields = \
-            Toolbox.get_attributes_from_features(points, lines, polygons)
+        point_fc_fields = Toolbox.get_attributes_from_features(points)
+        line_fc_fields = Toolbox.get_attributes_from_features(lines)
+        polygon_fc_fields = Toolbox.get_attributes_from_features(polygons)
 
         # Per geometry type, create a feature class if there are features in
         # the data
@@ -163,7 +157,7 @@ class Toolbox(object):
                                             arcpy.SpatialReference(4326))
                     row.setValue("SHAPE", point_geometry)
                     row.setValue("OSM_ID", element["id"])
-                    row.setValue("DATETIME", requesttime)
+                    row.setValue("DATETIME", request_time)
                     for tag in element["tags"]:
                         try:
                             row.setValue(tag.replace(":", ""),
@@ -189,7 +183,7 @@ class Toolbox(object):
                         pointArray = arcpy.Array(node_geometry)
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
-                        row.setValue("DATETIME", requesttime)
+                        row.setValue("DATETIME", request_time)
                         # Now deal with the way tags:
                         if "tags" in element:
                             for tag in element["tags"]:
@@ -205,7 +199,7 @@ class Toolbox(object):
                         pointArray = arcpy.Array(node_geometry)
                         row.setValue("SHAPE", pointArray)
                         row.setValue("OSM_ID", element["id"])
-                        row.setValue("DATETIME", requesttime)
+                        row.setValue("DATETIME", request_time)
                         # now deal with the way tags:
                         if "tags" in element:
                             for tag in element["tags"]:
@@ -399,8 +393,7 @@ class GetOSMDataSimple(object):
                 datatype="GPDate",
                 parameterType="Optional",
                 direction="Input")
-        now = datetime.datetime.utcnow()
-        param7.value = now.strftime("%d.%m.%Y %H:%M:%S")
+        param7.value = datetime.datetime.utcnow()
 
         param_out0 = arcpy.Parameter(
                 displayName="Layer containing OSM point data",
@@ -428,73 +421,70 @@ class GetOSMDataSimple(object):
         """Set whether tool is licensed to execute."""
         return True
 
-    def updateParameters(self, parameters):
+    def updateParameters(self, params):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
         # Update the parameters of keys accroding the values of "in_tag"
-        parameters[1].filter.list = self.get_config(parameters[0].value)
+        params[1].filter.list = self.get_config(params[0].value)
 
         # Switch the availability of the 'region name' parameter and the
         # 'extent' parameter depending on which extent indication method is
         # selected
-        if parameters[2].value == "Geocode a region name":
-            parameters[3].enabled = True
-            parameters[4].enabled = False
+        if params[2].value == "Geocode a region name":
+            params[3].enabled = True
+            params[4].enabled = False
         else:
-            parameters[3].enabled = False
-            parameters[4].enabled = True
+            params[3].enabled = False
+            params[4].enabled = True
 
-        if parameters[5].value is not None:
+        if params[5].value is not None:
             target_sr = arcpy.SpatialReference()
-            # target_sr.loadFromString(parameters[5].value).exportToString())
-            target_sr.loadFromString(parameters[5].value)
+            # target_sr.loadFromString(params[5].value).exportToString())
+            target_sr.loadFromString(params[5].value)
             # If necessary, find candidate transformations between EPSG:4326
             # and <target_sr> and offer them in the dropdown menu
             if target_sr.factoryCode != 4326:
-                parameters[6].enabled = True
-                parameters[6].filter.list = \
-                    arcpy.ListTransformations(arcpy.SpatialReference(4326),
-                                              target_sr)
-                parameters[6].value = parameters[6].filter.list[0]
+                params[6].enabled = True
+                params[6].filter.list = arcpy.ListTransformations(
+                        arcpy.SpatialReference(4326), target_sr)
+                params[6].value = params[6].filter.list[0]
             if target_sr.factoryCode == 4326:
-                parameters[6].enabled = False
+                params[6].enabled = False
         return
 
-    def updateMessages(self, parameters):
+    def updateMessages(self, params):
         """Modify the messages created by internal validation for each tool
         parameter. This method is called after internal validation."""
         # If only time is selected, year will be autofilled with "1899"
-        if parameters[7].value.year < 2004:
-            parameters[7].setWarningMessage("No or invalid date provided! "
-                                            "Date must be greater than 9th "
-                                            "of August 2004!")
+        earliest_date = datetime.datetime(2004, 8, 9, 0, 0)
+        if params[7].value < earliest_date:
+            params[7].setWarningMessage("No or invalid date provided. The "
+                                        "date to be queried must be "
+                                        "2004-08-09 (9 August 2004) or later.")
         return
 
-    def execute(self, parameters, messages):
+    def execute(self, params, messages):
         """The code that is run, when the ArcGIS tool is run."""
 
-        query_date = QUERY_DATE.replace("timestamp",
-                                        parameters[7].value.strftime("%Y-%m-%d"
-                                                                     "T%H:%M:"
-                                                                     "%SZ"))
+        query_date = QUERY_DATE.replace("timestamp", params[7].value.strftime(
+                "%Y-%m-%dT%H:%M:%SZ"))
 
         # Create the spatial reference and set the geographic transformation
         # in the environment settings (if given)
-        sr = Toolbox.set_spatial_reference(parameters[5].value,
-                                           parameters[6].value)
+        sr = Toolbox.set_spatial_reference(params[5].value, params[6].value)
 
         # Get the bounding box-related parts of the Overpass API query, using
         # the indicated extent or by geocoding a region name given by the user
-        bbox_head, bbox_data = Toolbox.get_bounding_box(parameters[2].value,
-                                                        parameters[3].value,
-                                                        parameters[4].value)
+        bbox_head, bbox_data = Toolbox.get_bounding_box(params[2].value,
+                                                        params[3].value,
+                                                        params[4].value)
 
         # Get the list of OSM tag values checked by the user. The tool makes
         # the user supply at least one key.
-        tag_key = parameters[0].value
-        tag_values = parameters[1].value.exportToString().split(";")
+        tag_key = params[0].value
+        tag_values = params[1].value.exportToString().split(";")
 
         # If the wildcard (*) option is selected, replace any other tag value
         # that might be selected
@@ -544,13 +534,13 @@ class GetOSMDataSimple(object):
             arcpy.AddMessage("\tCollected %s objects (including reverse "
                              "objects)" % len(data["elements"]))
 
-        result_fcs = Toolbox.fill_feature_classes(data, parameters[7].value)
+        result_fcs = Toolbox.fill_feature_classes(data, params[7].value)
         if result_fcs[0]:
-            parameters[8].value = result_fcs[0]
+            params[8].value = result_fcs[0]
         if result_fcs[1]:
-            parameters[9].value = result_fcs[1]
+            params[9].value = result_fcs[1]
         if result_fcs[2]:
-            parameters[10].value = result_fcs[2]
+            params[10].value = result_fcs[2]
         return
 
 
@@ -623,15 +613,13 @@ class GetOSMDataExpert(object):
         return
 
 
-    def execute(self, parameters, messages):
+    def execute(self, params, messages):
         """The source code of the tool."""
         # Get data using urllib
 
-        query_date = QUERY_DATE.replace("timestamp",
-                                        parameters[1].value.strftime("%Y-%m-%d"
-                                                                     "T%H:%M:"
-                                                                     "%SZ"))
-        query = (QUERY_START + query_date + parameters[0].valueAsText +
+        query_date = QUERY_DATE.replace("timestamp", params[1].value.strftime(
+                "%Y-%m-%dT%H:%M:%SZ"))
+        query = (QUERY_START + query_date + params[0].valueAsText +
                  QUERY_END)
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
@@ -654,11 +642,11 @@ class GetOSMDataExpert(object):
         arcpy.AddMessage("\tCollected %s objects (including reverse objects)" %
                          len(data["elements"]))
 
-        result_fcs = Toolbox.fill_feature_classes(data, parameters[1].value)
+        result_fcs = Toolbox.fill_feature_classes(data, params[1].value)
         if result_fcs[0]:
-            parameters[2].value = result_fcs[0]
+            params[2].value = result_fcs[0]
         if result_fcs[1]:
-            parameters[3].value = result_fcs[1]
+            params[3].value = result_fcs[1]
         if result_fcs[2]:
-            parameters[4].value = result_fcs[2]
+            params[4].value = result_fcs[2]
         return
