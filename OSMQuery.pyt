@@ -25,10 +25,10 @@ import requests
 import json
 import time
 import datetime
+import random
 from os.path import dirname, join, abspath
 
-# Constants for building the query to the Overpass API
-QUERY_URL = "http://overpass-api.de/api/interpreter"
+# Constants for building the query to an Overpass API
 QUERY_START = "[out:json][timeout:25]"
 QUERY_DATE = '[date:"timestamp"];('
 QUERY_END = ');(._;>;);out;>;'
@@ -47,7 +47,20 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [GetOSMDataSimple, GetOSMDataExpert]
-
+    @classmethod
+    def get_server_URL(self):
+        """Load the configuration file and find Overpass API endpoints"""
+        # Load JSON file with configuration info
+        json_file = join(dirname(abspath(__file__)), 'config/servers.json')
+        try:
+            with open(json_file) as f:
+                config_json = json.load(f)
+        except IOError:
+            arcpy.AddError('Configuration file %s not found.' % json_file)
+        except ValueError:
+            arcpy.AddError('Configuration file %s is not valid JSON.' %
+                           json_file)
+        return random.choice(config_json["overpass_servers"])
     @classmethod
     def create_result_fc(cls, geometry_type, fields, timestamp):
         fc_name = '%ss_%s' % (geometry_type, str(timestamp))
@@ -316,21 +329,6 @@ class GetOSMDataSimple(object):
         else:
             return sorted([value for value in config_json[config_item]])
 
-    def get_servers(self):
-        """Load the configuration file and find Overpass API endpoints
-        (this function is not in use yet)"""
-        # Load JSON file with configuration info
-        json_file = join(dirname(abspath(__file__)), 'config/servers.json')
-        try:
-            with open(json_file) as f:
-                config_json = json.load(f)
-        except IOError:
-            arcpy.AddError('Configuration file %s not found.' % json_file)
-        except ValueError:
-            arcpy.AddError('Configuration file %s is not valid JSON.' %
-                           json_file)
-        return [server for server in config_json["overpass_servers"]]
-
     def getParameterInfo(self):
         """Define parameter definitions for the ArcGIS toolbox"""
         param0 = arcpy.Parameter(
@@ -516,6 +514,10 @@ class GetOSMDataSimple(object):
 
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
+        # Get the server to use from the config:
+        QUERY_URL = Toolbox.get_server_URL()
+        arcpy.AddMessage("Server used for the query:")
+        arcpy.AddMessage(QUERY_URL)
         response = requests.get(QUERY_URL, params={'data': query})
         if response.status_code != 200:
             arcpy.AddMessage("\tOverpass server response was %s" %
@@ -623,6 +625,10 @@ class GetOSMDataExpert(object):
                  QUERY_END)
         arcpy.AddMessage("Issuing Overpass API query:")
         arcpy.AddMessage(query)
+        # Get the server to use from the config:
+        QUERY_URL = Toolbox.get_server_URL()
+        arcpy.AddMessage("Server used for the query:")
+        arcpy.AddMessage(QUERY_URL)
         response = requests.get(QUERY_URL, params={'data': query})
         if response.status_code != 200:
             arcpy.AddMessage("\tOverpass server response was %s" %
