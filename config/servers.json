@@ -1,4 +1,5 @@
 {
 	"overpass_servers": [
-			"http://overpass-api.de/api/interpreter"	]
+			"http://overpass-api.de/api/interpreter",
+			"https://overpass.kumi.systems/api/"]
 }
