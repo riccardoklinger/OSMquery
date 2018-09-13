@@ -21,7 +21,6 @@
 """
 
 import arcpy
-#import requests
 try:
     # For Python 3.0 and later
     from urllib.request import urlopen
