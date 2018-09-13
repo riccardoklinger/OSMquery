@@ -14,7 +14,7 @@ What the *Get OSM Data* tool of OSMQuery looks like in ArcMap:
 
 ![Get OSM Data tool GUI in ArcMap](https://github.com/riccardoklinger/OSMquery/blob/master/docs/OSMQuery-GUI-in-ArcMap.png)
 
-And in ArcGIS Pro:
+And the same Toolbox in ArcGIS Pro:
 
 ![Toolbox in ArcGIS Pro](https://i.imgur.com/oSshKHE.png)
 
