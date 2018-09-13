@@ -21,7 +21,13 @@
 """
 
 import arcpy
-import requests
+#import requests
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 import json
 import time
 import datetime
@@ -518,16 +524,19 @@ class GetOSMDataSimple(object):
         QUERY_URL = Toolbox.get_server_URL()
         arcpy.AddMessage("Server used for the query:")
         arcpy.AddMessage(QUERY_URL)
-        response = requests.get(QUERY_URL, params={'data': query})
-        if response.status_code != 200:
+        response = urlopen(QUERY_URL, query.encode('utf-8'))
+
+        #response = requests.get(QUERY_URL, params={'data': query})
+        if response.getcode() != 200:
             arcpy.AddMessage("\tOverpass server response was %s" %
-                             response.status_code)
+                             response.getcode())
             return
         try:
-            data = response.json()
+            #data = response.json()
+            data = json.loads(response.read())
         except:
             arcpy.AddMessage("\tOverpass API responded with non JSON data: ")
-            arcpy.AddError(response.text)
+            arcpy.AddError(response.read())
             return
         if len(data["elements"]) == 0:
             arcpy.AddMessage("\tNo data found!")
@@ -629,16 +638,16 @@ class GetOSMDataExpert(object):
         QUERY_URL = Toolbox.get_server_URL()
         arcpy.AddMessage("Server used for the query:")
         arcpy.AddMessage(QUERY_URL)
-        response = requests.get(QUERY_URL, params={'data': query})
-        if response.status_code != 200:
+        response = urlopen(QUERY_URL, query.encode('utf-8'))
+        if response.getcode() != 200:
             arcpy.AddMessage("\tOverpass server response was %s" %
-                             response.status_code)
+                             response.getcode())
             return
         try:
-            data = response.json()
+            data = json.loads(response.read())
         except:
             arcpy.AddMessage("\tOverpass API responded with non JSON data: ")
-            arcpy.AddError(response.text)
+            arcpy.AddError(response.read())
             return
         if len(data["elements"]) == 0:
             arcpy.AddMessage("\tNo data found!")
