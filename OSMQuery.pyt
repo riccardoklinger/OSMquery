@@ -278,13 +278,14 @@ class Toolbox(object):
 
         elif extent_indication_method == "Geocode a region name":
             # Get an area ID from Nominatim geocoding service
-            nominatim_url = 'https://nominatim.openstreetmap.org/search?q=' \
+            NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search?q=' \
                             '%s&format=json' % region_name
             arcpy.AddMessage("\nGecoding region using Nominatim: %s..." %
-                             nominatim_url)
-            nominatim_response = requests.get(nominatim_url)
+                             NOMINATIM_URL)
+            nominatim_response = urlopen(NOMINATIM_URL)
             try:
-                nominatim_data = nominatim_response.json()
+                nominatim_data = json.loads(nominatim_response.read().decode("utf-8"))
+                arcpy.AddMessage(nominatim_data)
                 for result in nominatim_data:
                     if result["osm_type"] == "relation":
                         nominatim_area_id = result['osm_id']
