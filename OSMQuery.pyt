@@ -29,7 +29,7 @@ import random
 from os.path import dirname, join, abspath
 
 # Constants for building the query to an Overpass API
-QUERY_START = "[out:json][timeout:25]"
+QUERY_START = "[out:json][timeout:60]"
 QUERY_DATE = '[date:"timestamp"];('
 QUERY_END = ');(._;>;);out;>;'
 
@@ -82,6 +82,8 @@ class Toolbox(object):
         for field in fields:
             try:
                 field = field.replace(":", "")
+                if field[0].isdigit():
+                    field = "_" + field
                 arcpy.AddMessage("\tAdding attribute %s..." % field)
                 arcpy.AddField_management(fc, field, "STRING", 255, "", "",
                                           field, "NULLABLE")
@@ -173,7 +175,11 @@ class Toolbox(object):
                     row.setValue("DATETIME", request_time)
                     for tag in element["tags"]:
                         try:
-                            row.setValue(tag.replace(":", ""),
+                            if tag[0].isdigit():
+                                row.setValue("_" + tag.replace(":", ""),
+                                         element["tags"][tag])
+                            else:
+                                row.setValue(tag.replace(":", ""),
                                          element["tags"][tag])
                         except:
                             arcpy.AddMessage("Adding value failed.")
@@ -201,7 +207,11 @@ class Toolbox(object):
                         if "tags" in element:
                             for tag in element["tags"]:
                                 try:
-                                    row.setValue(tag.replace(":", ""),
+                                    if tag[0].isdigit():
+                                        row.setValue("_" + tag.replace(":", ""),
+                                                 element["tags"][tag])
+                                    else:
+                                        row.setValue(tag.replace(":", ""),
                                                  element["tags"][tag])
                                 except:
                                     arcpy.AddMessage("Adding value failed.")
@@ -217,7 +227,11 @@ class Toolbox(object):
                         if "tags" in element:
                             for tag in element["tags"]:
                                 try:
-                                    row.setValue(tag.replace(":", ""),
+                                    if tag[0].isdigit():
+                                        row.setValue("_" + tag.replace(":", ""),
+                                                 element["tags"][tag])
+                                    else:
+                                        row.setValue(tag.replace(":", ""),
                                                  element["tags"][tag])
                                 except:
                                     arcpy.AddMessage("Adding value failed.")
