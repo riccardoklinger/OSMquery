@@ -22,15 +22,20 @@ And the same Toolbox in ArcGIS Pro:
 Download this repository (and unzip, if necessary). Either navigate to it in ArcGIS Pro or ArcMap using the "Connect to Folder" function in the ArcCatalog window or add it using the "Add Toolbox" function. Only from within ArcGIS Pro or ArcMap you can restrict the area of interest to the map extent in your display. Running the tool from ArcCatalog you can use any of the other options for specifying your area of interest.
 
 ## Prerequisites
-Apart from the core Python modules `datetime`, `json`, `time` and `os`, OSMQuery requires `arcpy` (of course) and `requests` to be installed. Depending on your Python version and environment you may or may not have `requests` installed already. You can test this, for example, by opening a Windows command prompt, starting Python (type `python`) and entering `import requests`. If your command prompt looks like this:
+The plugin was developed using ArcGIS 10.6 and ArcGIS Pro 2.2.2 but it was tested on ArcGIS 10.4.1 as well.
+The plugin only uses core modules from Python2/3:
 
-`>>> import requests`
+* urllib  for Python3 or urllib2 if you're on Python2
+* json
+* time
+* datetime
+* random
+* os
+* arcpy
 
-`>>>`
+These core modules should be already part of your Python version which was installed alongside with ArcGIS Pro and/or ArcMap.
 
-you're all set. If an import error is displayed, you have to [install the Python `requests` module](http://docs.python-requests.org/en/master/user/install/) before using OSMQuery.
-
-## More Details on Usage 
+## More Details on Usage
 ### Querying OSM Tags
 OSM tags like, for example, `amenity=bakery` consist of a key (in the example: `amenity`) and a value (in the example: `bakery`). In the `Get OSM Data` tool for simple queries, select a key and value(s) pair for which OSM should be queried for features. In each run of the tool, you can use only one key but you can use one or several values. For example, you can query only for `amenity=atm` or you can query for both `amenity=atm` and `amenity=bank` in one run of the tool. If you chose to do the latter, the results for different tags (or more specifically: OSM values) are summarized into one feature class per geometry type.
 
@@ -41,7 +46,7 @@ Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will add all tags t
 For defining the spatial extent of your query you can use two options: You can either enter a region name (which will be geocoded using the OSM-based geocoding service [Nominatim](https://nominatim.openstreetmap.org/search)) or you can define a bounding box using the standard ArcGIS Pro or ArcMap options, e.g. manually specifying coordinates, using the extent of a layer or the option *Same as Display*.
 
 ### Defining a Date and Time of Interest
-Using the appropriate parameter you can set a reference date and time (the default is the current time). Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will query OSM for the specified point in time and will only yield features that were part of OSM then. The reference date and time is given in [UTC (Cordinated Universal Time)](https://en.wikipedia.org/wiki/Coordinated_Universal_Time). 
+Using the appropriate parameter you can set a reference date and time (the default is the current time). Both tools, `Get OSM Data` and `Get OSM Data (Expert Tool)`, will query OSM for the specified point in time and will only yield features that were part of OSM then. The reference date and time is given in [UTC (Cordinated Universal Time)](https://en.wikipedia.org/wiki/Coordinated_Universal_Time).
 
 ### Working with the Resulting Data
 After any of the two tools has run successfully, the results will be drawn on the map in up to three timestamped feature layers (one each for point features, line features, and polygon features). The respective feature classes will be stored in your Scratch Workspace (`arcpy.env.scratchWorkspace`). If you want to persist the results, you can export the feature layers from the table of contents of ArcGIS Pro or ArcMap (or directly from your Scratch Workspace) into new feature classes in a destination of your choosing.
