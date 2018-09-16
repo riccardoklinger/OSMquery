@@ -10,9 +10,10 @@ define(['dojo/_base/declare',
 'dojo/store/Memory',
 'dijit/form/ComboBox',
 'dijit/registry',
+'dojo/request',
 'dojo/domReady!'
 ],
-  function(declare, html,on, lang, array, dom, parser, BaseWidget, ready, Memory, ComboBox, registry) {
+  function(declare, html,on, lang, array, dom, parser, BaseWidget, ready, Memory, ComboBox, registry, request) {
     //To create a widget, you need to derive from BaseWidget
     return declare([BaseWidget], {
       // Custom widget code goes here
@@ -53,12 +54,12 @@ define(['dojo/_base/declare',
         dojo.connect(registry.byId('osmkey'),'onChange',lang.hitch(this, 'keyHasChanged'));
         keyStore = new Memory({data: keys}	);
         console.log(registry.byId("osmkey"));
+        //connect search button with function:
+        this.own(on(dojo.byId("getOSMdata"),	'click', lang.hitch(this, 'doSearch')));
       },
       keyHasChanged:function() {
         var Configuration = this.config;
         //clear current combobox store
-          //console.log(Configuration);
-          //console.log(dojo.byId("osmkey").value);
         var folderListLength = registry.byId("osmtag").store.data.length
         for(var n=0; n < folderListLength; n++){
           registry.byId("osmtag").get('store').remove(n)
@@ -68,14 +69,26 @@ define(['dojo/_base/declare',
         k = 0;
         currentKey = dojo.byId("osmkey").value;
         tags = new Array();
-        console.log(Configuration[currentKey].values());
         for (tag in Configuration[currentKey]){
-        ////  if (Configuration.hasOwnProperty(key)){
-          //  tags.push(tag);
-            console.log(tag);
             registry.byId("osmtag").get('store').add({ name: Configuration[currentKey][tag], id: k });
             k+=1;
         }
+      },
+      doSearch:function(){
+        QUERY_START = "[out:json][timeout:60]"
+        QUERY_DATE = '[date:"timestamp"];('
+        QUERY_END = ');(._;>;);out;>;'
+        var key = dojo.byId("osmkey").value;
+        var tag = dojo.byId("osmtag").value;
+        request.post("http://overpass-api.de/api/interpreter", {
+        data: '[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395);way["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395);relation["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395););(._;>;);out;>;',
+        headers: {
+        },
+        handleAs: "json"
+    }).then(function(response){
+        //response holds now all the information
+        console.log(response.version);
+    });
       }
       // onOpen: function(){
       //   console.log('onOpen');
