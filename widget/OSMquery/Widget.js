@@ -81,14 +81,18 @@ define(['dojo/_base/declare',
         var key = dojo.byId("osmkey").value;
         var tag = dojo.byId("osmtag").value;
         request.post("http://overpass-api.de/api/interpreter", {
-        data: '[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395);way["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395);relation["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395););(._;>;);out;>;',
-        headers: {
-        },
-        handleAs: "json"
-    }).then(function(response){
+          data: '[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395);way["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395);relation["amenity"="school"](58.710191847296,-4.449434890700729,59.43312109760033,-0.9760399259956395););(._;>;);out;>;',
+          headers: {},
+          handleAs: "json"
+        }).then(function(response){
         //response holds now all the information
-        console.log(response.version);
-    });
+          console.log(response.version);
+          if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?"){
+            console.log("parsing data");
+          } else {
+            console.log("aborting");
+          }
+        });
       }
       // onOpen: function(){
       //   console.log('onOpen');
