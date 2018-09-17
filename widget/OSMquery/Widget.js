@@ -134,6 +134,9 @@ define(['dojo/_base/declare',
         //var queryExtent = "(" + String(extent[0].y) + "," + String(extent[0].x) + "," + String(extent[1].y) + "," + String(extent[1].x) + ")";
         var key = dojo.byId("osmkey").value;
         var tag = dojo.byId("osmtag").value;
+        if (tag=="* (any value, including the ones listed below)"){
+          tag = "";
+        }
         var gl = new GraphicsLayer();
         //points = new Array()
         var s = new SimpleMarkerSymbol().setSize(60);
@@ -143,7 +146,7 @@ define(['dojo/_base/declare',
           console.log(queryExtent);
           var layersRequest = esriRequest({
             url: dataUrl,
-            content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["amenity"="school"]' + queryExtent + ';);(._;>;);out;>;'},
+            content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["' + key + '"="' + tag + '"]' + queryExtent + ';);(._;>;);out;>;'},
             handleAs: "json",
             callbackParamName: "callback"
           });
