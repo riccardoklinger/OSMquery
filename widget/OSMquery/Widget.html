@@ -1,4 +1,7 @@
 <div>
+  <div class="sectionheads">
+    OSM tags and keys
+  </div>
   <table style="width:100%">
 		<tr>
       <td style="width:130px">
@@ -15,11 +18,11 @@
       <td>
         <div data-dojo-type="dijit/form/FilteringSelect" id="osmtag" class="dijit-form-FilteringSelect" title="Tag:" style="width:100%"></div>
       </td>
-      <td style="width:100px">
-        <button style="margin-left:10px" data-dojo-type="dijit/form/Button" id="getOSMdata" type="button">get data</button>
-      </td>
     </tr>
   </table>
+  <div class="sectionheads">
+    Extent
+  </div>
   <div style="text-align: center;margin-bottom: 10px;" id="ymax">
   Ymax</div>
     <div style="text-align: center; margin-bottom: 10px;">
@@ -27,5 +30,9 @@
     </div>
     <div style="text-align: center; margin-bottom: 10px;" id="ymin">
     Ymin</div>
+    <div style="text-align:center;">
+      <hr>
 
+      <button data-dojo-type="dijit/form/Button" id="getOSMdata" type="button">get data</button>
+    </div>
 </div>

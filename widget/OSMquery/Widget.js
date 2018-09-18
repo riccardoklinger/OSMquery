@@ -81,6 +81,7 @@ define(['dojo/_base/declare',
             k+=1;
           }
         }
+        this.updateExtent();
         this.own(on(this.map, "pan", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "zoomEnd", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "update-end", lang.hitch(this, this.updateExtent)));
