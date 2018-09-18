@@ -12,7 +12,6 @@ define(['dojo/_base/declare',
     'dijit/form/ComboBox',
     'dijit/registry',
     'esri/request',
-    //'esri/map',
     'esri/graphic',
     'esri/Color',
     "esri/InfoTemplate",
@@ -25,8 +24,6 @@ define(['dojo/_base/declare',
         "esri/geometry/Point",
         'esri/SpatialReference',
         "esri/geometry/projection",
-    //'esri/graphic',
-    //'esri/Color',
     'dojo/domReady!'
 ],
   function(declare,
@@ -55,18 +52,8 @@ define(['dojo/_base/declare',
     SpatialReference,
     projection
   ) {
-    //To create a widget, you need to derive from BaseWidget
     return declare([BaseWidget, _WidgetsInTemplateMixin], {
-      // Custom widget code goes here
-
       baseClass: 'jimu-widget-osmquery',
-
-      //this property is set by the framework when widget is loaded.
-      //name: 'CustomWidget',
-
-
-      //methods to communication with app container:
-
       postCreate: function() {
          this.inherited(arguments);
          console.log(this.map.spatialReference);
@@ -99,12 +86,7 @@ define(['dojo/_base/declare',
         this.own(on(this.map, "update-end", lang.hitch(this, this.updateExtent)));
         dojo.connect(registry.byId('osmkey'),'onChange',lang.hitch(this, 'keyHasChanged'));
         keyStore = new Memory({data: keys}	);
-        //console.log(registry.byId("osmkey"));
-        //console.log(registry.byId("map"));
-        //connect search button with function:
         this.own(on(dojo.byId("getOSMdata"),	'click', lang.hitch(this, this.doSearch)));
-        //this.own(on(dojo.byId("getOSMdata"),	'click', lang.hitch(this, this.getExtent)));
-
       },
       keyHasChanged:function() {
 
@@ -137,57 +119,39 @@ define(['dojo/_base/declare',
         if (tag=="* (any value, including the ones listed below)"){
           tag = "";
         }
-        var gl = new GraphicsLayer();
-        //points = new Array()
-        var s = new SimpleMarkerSymbol().setSize(60);
-          this.map.addLayer(gl);
-          esriConfig.defaults.io.corsEnabledServers.push("overpass-api.de");
-          dataUrl  = "http://overpass-api.de/api/interpreter";
-          console.log(queryExtent);
-          var layersRequest = esriRequest({
-            url: dataUrl,
-            content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["' + key + '"="' + tag + '"]' + queryExtent + ';);(._;>;);out;>;'},
-            handleAs: "json",
-            callbackParamName: "callback"
-          });
-            layersRequest.then(
-              function(response) {
-                if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?")){
-                  for(element in response.elements){
-                    console.log(response.elements[element]);
-                    if(response.elements[element].type == "node"){
-                        var attr = response.elements[element].tags;
-                        for (key in attr){
-                            if (key.indexOf(":")>0){
-                              attr[key.replace(":","_")] = attr[key];
-                              delete attr[key];
-                            }
-                        }
-                        console.log(attr);
-                        infoText = "";
-                        for (key in attr){
-                          //console.log(attr);
-                          //console.log(key);
-                          infoText += key + ":" + "${" + key + "}<br>";
-                          //console.log(infoText);
-                        }
-                        var infoTemplate = new InfoTemplate();
-                        infoTemplate.title = "Attributes";
-                        infoTemplate.content = infoText;
-                        var g = new Graphic(new Point(response.elements[element].lon, response.elements[element].lat), s, attr, infoTemplate);
-                        gl.add(g);
-                    }
-                  }
 
+        esriConfig.defaults.io.corsEnabledServers.push("overpass-api.de");
+        dataUrl  = "http://overpass-api.de/api/interpreter";
+        console.log(queryExtent);
+        var layersRequest = esriRequest({
+          url: dataUrl,
+          content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["' + key + '"="' + tag + '"]' + queryExtent + ';);(._;>;);out;>;'},
+          handleAs: "json",
+          callbackParamName: "callback"
+        });
+        layersRequest.then(
+          function(response) {
+
+            if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?")){
+              //check for needed layers:
+              var pointGL = null;
+              for(element in response.elements){
+                if(response.elements[element].type == "node"){
+                  if (!pointGL){
+                    pointGL = OSMQueryWidget.createPointGraphicsLayer();
+                  }
+                  OSMQueryWidget.createPoints(gl, response.elements[element])
                 }
-            }, function(error) {
-              console.log("Error: ", error.message);
-            });
+              }
+              console.log(pointGL);
+              OSMQueryWidget.map.addLayer(pointGL);
+            }
+        }, function(error) {
+          console.log("Error: ", error.message);
+        });
       },
       updateExtent:function(){
-          this.inherited(arguments);
-        // we need to convert the extent to 4326 coordinate pairs;
-        //console.log(extent);
+        this.inherited(arguments);
         if (this.map.extent.spatialReference.wkid != 4326){
           targetsr = new SpatialReference(4326);
           sourcesr = this.map.extent.spatialReference;
@@ -196,11 +160,7 @@ define(['dojo/_base/declare',
           UR = new Point(this.map.extent.xmax,this.map.extent.ymax, sourcesr);
           projection.load().then(function() {
             LLProj = projection.project(LL, targetsr);
-            extentStr+= String(Math.round(LLProj.y*100)/100) + ",";
-            extentStr+= String(Math.round(LLProj.x*100)/100) + ",";
             URProj = projection.project(UR, targetsr);
-            extentStr+= String(Math.round(URProj.y*100)/100) + ",";
-            extentStr+= String(Math.round(URProj.x*100)/100);
             queryExtent = "(" + extentStr + ")";
             dojo.byId("ymin").innerHTML = String(Math.round(LLProj.y*10000)/10000);
             dojo.byId("xmin").innerHTML = String(Math.round(LLProj.x*10000)/10000);
@@ -209,9 +169,38 @@ define(['dojo/_base/declare',
           });
         }
       },
-      //currently this function is not visible inside the then function call:
-      createPoints:function(x,y){
-        console.log(x);
+      createPointGraphicsLayer:function(){
+        pointGL = new GraphicsLayer();
+        pointGL.id = "nodes";
+        if (this.map.graphicsLayerIds.includes("nodes")){
+
+          for (var j = 0; j < this.map.graphicsLayerIds.length; j++) {
+            var layer = this.map.getLayer(this.map.graphicsLayerIds[j]);
+            if (layer.id == "nodes") {
+              this.map.removeLayer(layer);
+            }
+          }
+        }
+        return pointGL;
+      },
+      createPoints:function(gl, element){
+        var attr = element.tags;
+        for (key in attr){
+            if (key.indexOf(":")>0){
+              attr[key.replace(":","_")] = attr[key];
+              delete attr[key];
+            }
+        }
+        infoText = "";
+        for (key in attr){
+          infoText += key + ":" + "${" + key + "}<br>";
+        }
+        var infoTemplate = new InfoTemplate();
+        infoTemplate.title = "Attributes";
+        infoTemplate.content = infoText;
+        s = new SimpleMarkerSymbol().setSize(60);
+        var g = new Graphic(new Point(element.lon, element.lat), s, attr, infoTemplate);
+        pointGL.add(g);
       }
       // onOpen: function(){
       //   console.log('onOpen');
