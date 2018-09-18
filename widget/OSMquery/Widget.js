@@ -140,7 +140,7 @@ define(['dojo/_base/declare',
                   if (!pointGL){
                     pointGL = OSMQueryWidget.createPointGraphicsLayer();
                   }
-                  OSMQueryWidget.createPoints(gl, response.elements[element])
+                  OSMQueryWidget.createPoints(pointGL, response.elements[element])
                 }
               }
               console.log(pointGL);
