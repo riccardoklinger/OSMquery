@@ -539,8 +539,7 @@ class GetOSMDataSimple(object):
         arcpy.AddMessage("Server used for the query:")
         arcpy.AddMessage(QUERY_URL)
         q = Request(QUERY_URL)
-        q.add_header("User-Agent", "OSMquery")
-        q.add_header("Issue-Handler", "https://github.com/riccardoklinger/OSMquery")
+        q.add_header("User-Agent", "OSMquery/https://github.com/riccardoklinger/OSMquery")
         response = urlopen(q, query.encode('utf-8'))
 
         #response = requests.get(QUERY_URL, params={'data': query})
@@ -656,8 +655,7 @@ class GetOSMDataExpert(object):
         arcpy.AddMessage("Server used for the query:")
         arcpy.AddMessage(QUERY_URL)
         q = Request(QUERY_URL)
-        q.add_header("User-Agent", "OSMquery")
-        q.add_header("Issue-Handler", "https://github.com/riccardoklinger/OSMquery")
+        q.add_header("User-Agent", "OSMquery/https://github.com/riccardoklinger/OSMquery")
         response = urlopen(q, query.encode('utf-8'))
         if response.getcode() != 200:
             arcpy.AddMessage("\tOverpass server response was %s" %
