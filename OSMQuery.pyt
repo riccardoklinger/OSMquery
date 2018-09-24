@@ -23,10 +23,10 @@
 import arcpy
 try:
     # For Python 3.0 and later
-    from urllib.request import Request, urlopen
+    from urllib.request import Request, urlopen, quote
 except ImportError:
     # Fall back to Python 2's urllib2
-    from urllib2 import Request, urlopen
+    from urllib2 import Request, urlopen, quote
 import json
 import time
 import datetime
@@ -293,7 +293,7 @@ class Toolbox(object):
         elif extent_indication_method == "Geocode a region name":
             # Get an area ID from Nominatim geocoding service
             NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search?q=' \
-                            '%s&format=json' % region_name
+                            '%s&format=json' % quote(region_name, safe="%/:=&?~#+!$,;'@()*[]")
             arcpy.AddMessage("\nGecoding region using Nominatim: %s..." %
                              NOMINATIM_URL)
             nominatim_response = urlopen(NOMINATIM_URL)
