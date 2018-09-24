@@ -24,6 +24,9 @@ define(['dojo/_base/declare',
         "esri/geometry/Point",
         'esri/SpatialReference',
         "esri/geometry/projection",
+        'esri/arcgis/Portal',
+	'esri/arcgis/OAuthInfo',
+  'esri/IdentityManager',
     'dojo/domReady!'
 ],
   function(declare,
@@ -50,7 +53,10 @@ define(['dojo/_base/declare',
     Geometry,
     Point,
     SpatialReference,
-    projection
+    projection,
+    arcgisPortal,
+    OAuthInfo,
+    IdentityManager
   ) {
     return declare([BaseWidget, _WidgetsInTemplateMixin], {
       baseClass: 'jimu-widget-osmquery',
@@ -61,6 +67,7 @@ define(['dojo/_base/declare',
       },
 
       startup: function() {
+        //this.proofAdministrator();
         OSMQueryWidget = this;
         OSMQueryWidget.inherited(arguments);
         //fill select box with items:
@@ -81,6 +88,8 @@ define(['dojo/_base/declare',
             k+=1;
           }
         }
+        dojo.attr("osmkey", "value", "shop");
+        dojo.attr("osmtag", "value", "bakery");
         this.updateExtent();
         this.own(on(this.map, "pan", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "zoomEnd", lang.hitch(this, this.updateExtent)));
@@ -202,7 +211,7 @@ define(['dojo/_base/declare',
         s = new SimpleMarkerSymbol().setSize(60);
         var g = new Graphic(new Point(element.lon, element.lat), s, attr, infoTemplate);
         pointGL.add(g);
-      }
+      },
       // onOpen: function(){
       //   console.log('onOpen');
       // },
@@ -219,10 +228,24 @@ define(['dojo/_base/declare',
       //   console.log('onMaximize');
       // },
 
-      // onSignIn: function(credential){
-      //   /* jshint unused:false*/
-      //   console.log('onSignIn');
-      // },
+/*      proofAdministrator:function(){
+
+        var info = new OAuthInfo({
+          popup: true,
+          portalUrl: this.appConfig.portalUrl
+          });
+          IdentityManager.registerOAuthInfos([info]);
+
+          portal = new arcgisPortal.Portal(this.appConfig.portalUrl).signIn().then(
+            function (portalUser){
+              console.log("Signed in to the portal: ", portalUser.role);
+            }
+          ).otherwise(
+          function (error){
+            console.log("Error occurred while signing in: ", error);
+          }
+          );
+      },*/
 
       // onSignOut: function(){
       //   console.log('onSignOut');
