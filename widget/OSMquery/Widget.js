@@ -5,11 +5,13 @@ define(['dojo/_base/declare',
     'dijit/_WidgetsInTemplateMixin',
     'dojo/_base/array',
     'dojo/dom',
+    "dojo/dom-style",
     'dojo/parser',
     'jimu/BaseWidget',
     'dojo/ready',
     'dojo/store/Memory',
     'dijit/form/ComboBox',
+    "dijit/form/FilteringSelect",
     'dijit/registry',
     'esri/request',
     'esri/graphic',
@@ -36,11 +38,13 @@ define(['dojo/_base/declare',
     _WidgetsInTemplateMixin,
     array,
     dom,
+    domStyle,
     parser,
     BaseWidget,
     ready,
     Memory,
     ComboBox,
+    FilteringSelect,
     registry,
     esriRequest,
     //Map,
@@ -80,6 +84,12 @@ define(['dojo/_base/declare',
         keys = new Array();
         //getting configuration:
         var Configuration = this.config;
+        //fill region select
+        registry.byId("regionalSetting").get('store').add({ name: "BBOX definition", id: 0 });
+        registry.byId("regionalSetting").get('store').add({ name: "Region definition", id: 1 });
+        dojo.attr("regionalSetting", "value", "Region definition");
+        domStyle.set("extent", "visibility", "collapse");
+        dojo.connect(registry.byId('regionalSetting'),'onChange',lang.hitch(this, 'regionalSettingsChanged'));
         k = 0;
         for (key in Configuration){
           if (Configuration.hasOwnProperty(key)){
@@ -115,6 +125,19 @@ define(['dojo/_base/declare',
             registry.byId("osmtag").get('store').add({ name: Configuration[currentKey][tag], id: k });
             k+=1;
         }
+      },
+      regionalSettingsChanged:function(){
+        //get current state:
+        regSet=dojo.byId("regionalSetting").value;
+        if (regSet == "Region definition"){
+          domStyle.set("extent", "visibility", "collapse");
+          domStyle.set("regionTable", "visibility", "visible");
+        }
+        else {
+          domStyle.set("regionTable", "visibility", "collapse");
+          domStyle.set("extent", "visibility", "visible");
+        }
+
       },
       doSearch:function(){
         this.inherited(arguments);

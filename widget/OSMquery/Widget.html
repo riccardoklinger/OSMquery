@@ -25,7 +25,8 @@
   <div class="sectionheads">
     Extent
   </div>
-  <table class="extent">
+  <div data-dojo-type="dijit/form/FilteringSelect" id="regionalSetting" class="dijit-form-FilteringSelect" title="Region definition:" style="width:100%; margin-bottom: 10px;"></div>
+  <table class="extent" id="extent">
     <tr>
       <td colspan="2" id="ymax" ></td>
     </tr>
@@ -35,8 +36,17 @@
     <td colspan="2" id="ymin"></td>
   </tr>
 </table>
-<input type="text" name="firstname" value="testing testing"
-    data-dojo-type="dijit/form/TextBox" id="region" />
+<table style="width:100%" id ="regionTable">
+  <tr>
+    <td style="width:130px">
+      <label >Region Name:</label>
+    </td>
+    <td>
+      <input type="text" data-dojo-props="placeHolder: 'Hannover, Deutschland'" value="" data-dojo-type="dijit/form/TextBox" id="region" style="width:100%"  />
+    </td>
+  </tr>
+</table>
+
   <!--div style="text-align: center;margin-bottom: 10px;" id="ymax">
   </div>
   <div style="text-align: center; margin-bottom: 10px;">
