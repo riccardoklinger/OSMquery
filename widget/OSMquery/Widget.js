@@ -139,13 +139,58 @@ define(['dojo/_base/declare',
         }
 
       },
+      getExtent:function(regionString){
+        esriConfig.defaults.io.corsEnabledServers.push("nominatim.openstreetmap.org");
+          nominatimURL  = 'https://nominatim.openstreetmap.org/search?q=' + regionString + "&format=json";
+          console.log(nominatimURL);
+          var layersRequest = esriRequest({
+            url: nominatimURL,
+            disableIdentityLookup:  true,
+            handleAs: "json"
+            //callbackParamName: "callback"
+          });
+          var areaId;
+          layersRequest.then(
+            function(response) {
+              for(object in response){
+                console.log(response[object]);
+                if(response[object].osm_type == "relation"){
+                  nominatim_area_id = response[object].osm_id;
+                  areaId = parseInt(nominatim_area_id) + 3600000000;
+                  console.log(areaId);
+                  break;
+                }
+              }
+              console.log(areaId);
+            }, function(error) {
+            console.log("Error: ", error.message);
+          }
+        );
+        return areaId;
+      },
       doSearch:function(){
         this.inherited(arguments);
         QUERY_START = "[out:json][timeout:60]"
         QUERY_DATE = '[date:"timestamp"];('
         QUERY_END = ');(._;>;);out;>;'
         //getExtent:
-        queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
+        if (dojo.byId("regionalSetting").value== "extent"){
+          console.log(dojo.byId("region").value);
+          queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
+          area = ""
+        } else {
+          //queryExtent = ""
+          console.log(dojo.byId("region").value);
+          queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
+          var areaId;
+          areaId=this.getExtent(dojo.byId("region").value);
+          /*while (!(areaId<1)){
+            areaId=this.getExtent(dojo.byId("region").value);
+          }*/
+          console.log(areaId);
+        }
+
+        //
         //var queryExtent = "(" + String(extent[0].y) + "," + String(extent[0].x) + "," + String(extent[1].y) + "," + String(extent[1].x) + ")";
         var key = dojo.byId("osmkey").value;
         var tag = dojo.byId("osmtag").value;
