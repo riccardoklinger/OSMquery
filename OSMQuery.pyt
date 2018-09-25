@@ -117,7 +117,7 @@ class Toolbox(object):
         return fc_fields
 
     @classmethod
-    def fill_feature_classes(cls, data, request_time):
+    def fill_feature_classes(cls, data, request_time, geoOnly):
         fcs = [None, None, None]
 
         # ------------------------------------------------------
@@ -131,10 +131,15 @@ class Toolbox(object):
 
         # Per geometry type, gather all atributes present in the data
         # through elements per geometry type and collect their attributes
-        point_fc_fields = Toolbox.get_attributes_from_features(points)
-        line_fc_fields = Toolbox.get_attributes_from_features(lines)
-        polygon_fc_fields = Toolbox.get_attributes_from_features(polygons)
-
+        # if user wants to get all the attributes
+        if geoOnly == False:
+            point_fc_fields = Toolbox.get_attributes_from_features(points)
+            line_fc_fields = Toolbox.get_attributes_from_features(lines)
+            polygon_fc_fields = Toolbox.get_attributes_from_features(polygons)
+        else:
+            point_fc_fields = []
+            line_fc_fields = []
+            polygon_fc_fields = []
         # Per geometry type, create a feature class if there are features in
         # the data
         timestamp = int(time.time())
@@ -178,16 +183,17 @@ class Toolbox(object):
                     row.setValue("SHAPE", point_geometry)
                     row.setValue("OSM_ID", element["id"])
                     row.setValue("DATETIME", request_time)
-                    for tag in element["tags"]:
-                        try:
-                            if tag[0].isdigit():
-                                row.setValue("_" + tag.replace(":", ""),
-                                         element["tags"][tag])
-                            else:
-                                row.setValue(tag.replace(":", ""),
-                                         element["tags"][tag])
-                        except:
-                            arcpy.AddMessage("Adding value failed.")
+                    if not geoOnly:
+                        for tag in element["tags"]:
+                            try:
+                                if tag[0].isdigit():
+                                    row.setValue("_" + tag.replace(":", ""),
+                                             element["tags"][tag])
+                                else:
+                                    row.setValue(tag.replace(":", ""),
+                                             element["tags"][tag])
+                            except:
+                                arcpy.AddMessage("Adding value failed.")
                     point_fc_cursor.insertRow(row)
                     del row
                 if element["type"] == "way" and "tags" in element:
@@ -209,17 +215,18 @@ class Toolbox(object):
                         row.setValue("OSM_ID", element["id"])
                         row.setValue("DATETIME", request_time)
                         # Now deal with the way tags:
-                        if "tags" in element:
-                            for tag in element["tags"]:
-                                try:
-                                    if tag[0].isdigit():
-                                        row.setValue("_" + tag.replace(":", ""),
-                                                 element["tags"][tag])
-                                    else:
-                                        row.setValue(tag.replace(":", ""),
-                                                 element["tags"][tag])
-                                except:
-                                    arcpy.AddMessage("Adding value failed.")
+                        if not geoOnly:
+                            if "tags" in element:
+                                for tag in element["tags"]:
+                                    try:
+                                        if tag[0].isdigit():
+                                            row.setValue("_" + tag.replace(":", ""),
+                                                     element["tags"][tag])
+                                        else:
+                                            row.setValue(tag.replace(":", ""),
+                                                     element["tags"][tag])
+                                    except:
+                                        arcpy.AddMessage("Adding value failed.")
                         polygon_fc_cursor.insertRow(row)
                         del row
                     else:  # lines have different start end endnodes:
@@ -229,17 +236,18 @@ class Toolbox(object):
                         row.setValue("OSM_ID", element["id"])
                         row.setValue("DATETIME", request_time)
                         # now deal with the way tags:
-                        if "tags" in element:
-                            for tag in element["tags"]:
-                                try:
-                                    if tag[0].isdigit():
-                                        row.setValue("_" + tag.replace(":", ""),
-                                                 element["tags"][tag])
-                                    else:
-                                        row.setValue(tag.replace(":", ""),
-                                                 element["tags"][tag])
-                                except:
-                                    arcpy.AddMessage("Adding value failed.")
+                        if not geoOnly:
+                            if "tags" in element:
+                                for tag in element["tags"]:
+                                    try:
+                                        if tag[0].isdigit():
+                                            row.setValue("_" + tag.replace(":", ""),
+                                                     element["tags"][tag])
+                                        else:
+                                            row.setValue(tag.replace(":", ""),
+                                                     element["tags"][tag])
+                                    except:
+                                        arcpy.AddMessage("Adding value failed.")
                         line_fc_cursor.insertRow(row)
                         del row
             except:
@@ -412,6 +420,12 @@ class GetOSMDataSimple(object):
                 parameterType="Optional",
                 direction="Input")
         param7.value = datetime.datetime.utcnow()
+        param8 = arcpy.Parameter(
+                displayName="Save Coordinates only",
+                name="in_coordsOnly",
+                datatype="GPBoolean",
+                parameterType="Desired",
+                direction="Input")
 
         param_out0 = arcpy.Parameter(
                 displayName="Layer containing OSM point data",
@@ -433,7 +447,7 @@ class GetOSMDataSimple(object):
                 direction="Output")
 
         return [param0, param1, param2, param3, param4, param5, param6,
-                param7, param_out0, param_out1, param_out2]
+                param7, param8, param_out0, param_out1, param_out2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -561,13 +575,13 @@ class GetOSMDataSimple(object):
             arcpy.AddMessage("\tCollected %s objects (including reverse "
                              "objects)" % len(data["elements"]))
 
-        result_fcs = Toolbox.fill_feature_classes(data, params[7].value)
+        result_fcs = Toolbox.fill_feature_classes(data, params[7].value, params[8].value)
         if result_fcs[0]:
-            params[8].value = result_fcs[0]
+            params[9].value = result_fcs[0]
         if result_fcs[1]:
-            params[9].value = result_fcs[1]
+            params[10].value = result_fcs[1]
         if result_fcs[2]:
-            params[10].value = result_fcs[2]
+            params[11].value = result_fcs[2]
         return
 
 
@@ -675,7 +689,7 @@ class GetOSMDataExpert(object):
         arcpy.AddMessage("\tCollected %s objects (including reverse objects)" %
                          len(data["elements"]))
 
-        result_fcs = Toolbox.fill_feature_classes(data, params[1].value)
+        result_fcs = Toolbox.fill_feature_classes(data, params[1].value, True)
         if result_fcs[0]:
             params[2].value = result_fcs[0]
         if result_fcs[1]:
