@@ -301,10 +301,12 @@ class Toolbox(object):
         elif extent_indication_method == "Geocode a region name":
             # Get an area ID from Nominatim geocoding service
             NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search?q=' \
-                            '%s&format=json' % region_name
-            arcpy.AddMessage("\nGecoding region using Nominatim: %s..." %
+                            '%s&format=json' % quote(region_name)
+            arcpy.AddMessage("\nGecoding region using Nominatim:\n %s..." %
                              NOMINATIM_URL)
-            nominatim_response = urlopen(NOMINATIM_URL)
+            q = Request(NOMINATIM_URL)
+            q.add_header("User-Agent", "OSMquery/https://github.com/riccardoklinger/OSMquery")
+            nominatim_response = urlopen(q)
             try:
                 nominatim_data = json.loads(nominatim_response.read().decode("utf-8"))
                 arcpy.AddMessage(nominatim_data)
