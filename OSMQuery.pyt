@@ -34,7 +34,7 @@ import random
 from os.path import dirname, join, abspath
 
 # Constants for building the query to an Overpass API
-QUERY_START = "[out:json][timeout:60]"
+QUERY_START = "[out:json][timeout:180]"
 QUERY_DATE = '[date:"timestamp"];('
 QUERY_END = ');(._;>;);out;>;'
 
@@ -652,6 +652,7 @@ class GetOSMDataExpert(object):
         QUERY_URL = Toolbox.get_server_URL()
         arcpy.AddMessage("Server used for the query:")
         arcpy.AddMessage(QUERY_URL)
+        arcpy.AddMessage(query.encode('utf-8'))
         response = urlopen(QUERY_URL, query.encode('utf-8'))
         if response.getcode() != 200:
             arcpy.AddMessage("\tOverpass server response was %s" %

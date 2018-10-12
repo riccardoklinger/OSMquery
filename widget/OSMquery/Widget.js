@@ -82,6 +82,7 @@ define(['dojo/_base/declare',
         //registry.byId("osmkey").get('store').add({ name: "Test", id: 0 });
         //add all other items:
         keys = new Array();
+        areaId = new Array();
         //getting configuration:
         var Configuration = this.config;
         //fill region select
@@ -140,58 +141,74 @@ define(['dojo/_base/declare',
 
       },
       getExtent:function(regionString){
+        this.inherited(arguments);
         esriConfig.defaults.io.corsEnabledServers.push("nominatim.openstreetmap.org");
           nominatimURL  = 'https://nominatim.openstreetmap.org/search?q=' + regionString + "&format=json";
           console.log(nominatimURL);
-          var layersRequest = esriRequest({
+          var regionRequest = esriRequest({
             url: nominatimURL,
             disableIdentityLookup:  true,
             handleAs: "json"
             //callbackParamName: "callback"
           });
-          var areaId;
-          layersRequest.then(
+          regionRequest.then(
             function(response) {
               for(object in response){
                 console.log(response[object]);
                 if(response[object].osm_type == "relation"){
                   nominatim_area_id = response[object].osm_id;
-                  areaId = parseInt(nominatim_area_id) + 3600000000;
-                  console.log(areaId);
+                  OSMQueryWidget.areaId.push('area(' + String(parseInt(nominatim_area_id) + 3600000000) + ')->.searchArea;');
+                  OSMQueryWidget.areaId.push('(area.searchArea);');
                   break;
                 }
               }
-              console.log(areaId);
             }, function(error) {
             console.log("Error: ", error.message);
           }
         );
-        return areaId;
+        return;
       },
       doSearch:function(){
         this.inherited(arguments);
-        QUERY_START = "[out:json][timeout:60]"
-        QUERY_DATE = '[date:"timestamp"];('
-        QUERY_END = ');(._;>;);out;>;'
+        QUERY_START = "[out:json][timeout:60]";
+        QUERY_DATE = '[date:"timestamp"];(';
+        QUERY_END = ');(._;>;);out;>;';
+
         //getExtent:
         if (dojo.byId("regionalSetting").value== "extent"){
           console.log(dojo.byId("region").value);
-          queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
-          area = ""
+          OSMQueryWidget.areaId.push("");
+          OSMQueryWidget.areaId.push("(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")");
+          createRequest
+          .then(runRequest);
         } else {
           //queryExtent = ""
-          console.log(dojo.byId("region").value);
-          queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
-          var areaId;
-          areaId=this.getExtent(dojo.byId("region").value);
-          /*while (!(areaId<1)){
-            areaId=this.getExtent(dojo.byId("region").value);
-          }*/
-          console.log(areaId);
+          console.log(OSMQueryWidget.getExtent);
+          //queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
+          //var areaId;
+          //this.areaId=this.getExtent(dojo.byId("region").value);
+          this.getExtent(dojo.byId("region").value)
+          .then(runRequest);
+          /*var NominatimRun = 0;
+          //while (this.areaId[0]<1){
+          //()  if (NominatimRun <1){
+              this.areaId[0]=this.getExtent(dojo.byId("region").value);
+            }
+            NominatimRun = 1;
+          }
+          console.log("Area= ");
+          //this.area = this.areaId[0];
+
+          console.log(this.area);*/
+
         }
 
         //
         //var queryExtent = "(" + String(extent[0].y) + "," + String(extent[0].x) + "," + String(extent[1].y) + "," + String(extent[1].x) + ")";
+
+      },
+      createRequest:function(){
+        this.inherited(arguments);
         var key = dojo.byId("osmkey").value;
         var tag = dojo.byId("osmtag").value;
         if (tag=="* (any value, including the ones listed below)"){
@@ -201,15 +218,18 @@ define(['dojo/_base/declare',
         esriConfig.defaults.io.corsEnabledServers.push("overpass-api.de");
         dataUrl  = "http://overpass-api.de/api/interpreter";
         console.log(queryExtent);
-        var layersRequest = esriRequest({
+        var requestSend = false;
+        this.layersRequest = esriRequest({
           url: dataUrl,
-          content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];(node["' + key + '"="' + tag + '"]' + queryExtent + ';);(._;>;);out;>;'},
+          content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"]' + OSMQueryWidget.areaId[0] + ';(node["' + key + '"="' + tag + '"]' + OSMQueryWidget.areaId[1] + ';);(._;>;);out;>;'},
           handleAs: "json",
           callbackParamName: "callback"
         });
-        layersRequest.then(
+      },
+      runRequest:function(){
+        this.inherited(arguments);
+        OSMQueryWidget.layersRequest.then(
           function(response) {
-
             if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?")){
               //check for needed layers:
               var pointGL = null;
