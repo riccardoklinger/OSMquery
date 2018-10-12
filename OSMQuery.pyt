@@ -301,7 +301,7 @@ class Toolbox(object):
         elif extent_indication_method == "Geocode a region name":
             # Get an area ID from Nominatim geocoding service
             NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search?q=' \
-                            '%s&format=json' % quote(region_name, safe="%/:=&?~#+!$,;'@()*[]")
+                            '%s&format=json' % region_name
             arcpy.AddMessage("\nGecoding region using Nominatim: %s..." %
                              NOMINATIM_URL)
             nominatim_response = urlopen(NOMINATIM_URL)
@@ -424,7 +424,7 @@ class GetOSMDataSimple(object):
                 displayName="Save Coordinates only",
                 name="in_coordsOnly",
                 datatype="GPBoolean",
-                parameterType="Desired",
+                parameterType="Optional",
                 direction="Input")
 
         param_out0 = arcpy.Parameter(
