@@ -1,0 +1,24 @@
+{
+  "name": "OSMquery",
+  "2D": true,
+  "3D": false,
+  "platform": "HTML",
+  "version": "2.9",
+  "wabVersion": "2.9",
+  "author": "Riccardo Klinger",
+  "description": "This is the OSMquery widget",
+  "copyright": "",
+  "license": "https://raw.githubusercontent.com/riccardoklinger/OSMquery/master/LICENSE",
+  "properties": {
+		"inPanel":true,
+		"hasLocale": true,
+		"hasStyle":true,
+		"hasConfig":true,
+		"hasUIFile":true,
+		"hasSettingPage":true,
+		"hasSettingUIFile":true,
+		"hasSettingLocale":true,
+		"hasSettingStyle":true,
+		"IsController":false
+  }
+}

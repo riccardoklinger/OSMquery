@@ -1,0 +1,15 @@
+.sectionheads {
+  font-size: larger;
+  font-weight: bolder;
+  text-align: center;
+  margin-bottom: 10px;
+}
+td {
+  text-align:center;
+  padding: 10px;
+}
+.extent {
+  text-align: center;
+  width: 100%;
+    border: 1px solid #000;
+}

@@ -1,0 +1,62 @@
+<div>
+  <div class="sectionheads">
+    OSM tags and keys
+
+  </div>
+  <table style="width:100%">
+		<tr>
+      <td style="width:130px">
+        <label >Key:</label>
+      </td>
+      <td>
+        <div data-dojo-type="dijit/form/Select" id="osmkey" class="dijit-form-FilteringSelect" title="Key:" style="width:100%"></div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width:130px">
+        <label >Tag:</label>
+      </td>
+      <td>
+        <div data-dojo-type="dijit/form/Select" id="osmtag" class="dijit-form-FilteringSelect" title="Tag:" style="width:100%"></div>
+      </td>
+    </tr>
+  </table>
+      <hr>
+  <div class="sectionheads">
+    Extent
+  </div>
+  <div data-dojo-type="dijit/form/Select" id="regionalSetting" class="dijit-form-FilteringSelect" title="Region definition:" style="width:100%; margin-bottom: 10px;"></div>
+  <table class="extent" id="extent">
+    <tr>
+      <td colspan="2" id="ymax" ></td>
+    </tr>
+    <tr><td id="xmin" style="text-align: left;"></td><td id="xmax" style="text-align: right;"></td>
+    </tr>
+    <tr>
+    <td colspan="2" id="ymin"></td>
+  </tr>
+</table>
+<table style="width:100%" id ="regionTable">
+  <tr>
+    <td>
+      <input type="text" data-dojo-props="placeHolder: 'Hannover, Deutschland'" value="" data-dojo-type="dijit/form/TextBox" id="region" style="width:100%"  />
+    </td>
+    <td>
+      <button data-dojo-type="dijit/form/Button" id="getLocation" type="button">Look up</button>
+    </td>
+  </tr>
+</table>
+
+  <!--div style="text-align: center;margin-bottom: 10px;" id="ymax">
+  </div>
+  <div style="text-align: center; margin-bottom: 10px;">
+    <span style="margin-right: 50px;" id="xmin"></span><span id="xmax"></span>
+    </div>
+    <div style="text-align: center; margin-bottom: 10px;" id="ymin">
+    </div-->
+    <div style="text-align:center;">
+      <hr>
+
+      <button data-dojo-type="dijit/form/Button" id="getOSMdata" type="button">get data</button>
+    </div>
+</div>

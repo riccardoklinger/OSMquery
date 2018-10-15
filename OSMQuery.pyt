@@ -34,7 +34,7 @@ import random
 from os.path import dirname, join, abspath
 
 # Constants for building the query to an Overpass API
-QUERY_START = "[out:json][timeout:60]"
+QUERY_START = "[out:json][timeout:180]"
 QUERY_DATE = '[date:"timestamp"];('
 QUERY_END = ');(._;>;);out;>;'
 
