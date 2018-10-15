@@ -95,6 +95,7 @@ define(['dojo/_base/declare',
         //dojo.attr("regionalSetting", "value", "BBOX definition");
         domStyle.set("extent", "visibility", "collapse");
         dojo.connect(registry.byId('regionalSetting'),'onChange',lang.hitch(this, 'regionalSettingsChanged'));
+
         //k = 0;
         for (key in Configuration){
           if (Configuration.hasOwnProperty(key)){
@@ -112,19 +113,22 @@ define(['dojo/_base/declare',
         //dojo.attr("osmtag", "value", "bakery");
         this.keyHasChanged();
         this.updateExtent();
+        this.locationFound = false;
+        this.regionalSettingsChanged();
         this.own(on(this.map, "pan", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "zoomEnd", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "update-end", lang.hitch(this, this.updateExtent)));
         dojo.connect(registry.byId('osmkey'),'onChange',lang.hitch(this, 'keyHasChanged'));
-
-        registry.byId("getLocation").connect("onClick", lang.hitch(this, this.getExtent()));
+        dojo.connect(registry.byId("getLocation"), "onClick", lang.hitch(this, 'getExtent'));
+        //registry.byId("getLocation").on("click", this.getExtent());
         //dojo.byId("getLocation").connect("onClick", function test(){console.log("clicked")});
         //dojo.connect(dojo.byId("getLocation"), "onClick", OSMQueryWidget.getExtent(dojo.byId("region").value));
 
         keyStore = new Memory({data: keys}	);
-        //this.own(on(dojo.byId("getOSMdata"),	'click', lang.hitch(this, this.doSearch)));
+        dojo.connect(registry.byId("getOSMdata"), "onClick", lang.hitch(this, 'doSearch'));
+        //this.own(on(dojo.byId("getOSMdata"),	'onClick', lang.hitch(this, "doSearch")));
 
-        this.locationFound = false;
+
       },
       keyHasChanged:function() {
 
@@ -148,14 +152,15 @@ define(['dojo/_base/declare',
         this.inherited(arguments);
         console.log(this.locationFound);
 
-        regSet=dojo.byId("regionalSetting").value;
+        regSet=registry.byId("regionalSetting").value;
+        console.log(regSet);
         if (regSet == "region"){
           domStyle.set("extent", "visibility", "collapse");
           domStyle.set("regionTable", "visibility", "visible");
           if (this.locationFound == false){
-            var LocButton = registry.byId("getOSMdata");
-            LocButton.set("disabled", true);
-            //domStyle.set("getOSMdata", "disabled ", true);
+            registry.byId("getOSMdata").set("disabled", true);
+          } else {
+            registry.byId("getOSMdata").set("disabled", false);
           }
         }
         else {
@@ -182,10 +187,12 @@ define(['dojo/_base/declare',
               for(object in response){
                 console.log(response[object]);
                 if(response[object].osm_type == "relation"){
-                  console.log(response[object]);
+                  //console.log(response[object]);
                   nominatim_area_id = response[object].osm_id;
                   OSMQueryWidget.areaId.push('area(' + String(parseInt(nominatim_area_id) + 3600000000) + ')->.searchArea;');
                   OSMQueryWidget.areaId.push('(area.searchArea);');
+                  OSMQueryWidget.areaString = response[object].display_name;
+                  dojo.byId("region").value = OSMQueryWidget.areaString;
                   OSMQueryWidget.locationFound = true;
                   OSMQueryWidget.regionalSettingsChanged();
                   break;
@@ -203,14 +210,48 @@ define(['dojo/_base/declare',
         QUERY_DATE = '[date:"timestamp"];(';
         QUERY_END = ');(._;>;);out;>;';
 
-        //getExtent:
-        if (dojo.byId("regionalSetting").value== "extent"){
-          console.log(dojo.byId("region").value);
+        //getExtent if not alread assigned:
+        if (registry.byId("regionalSetting").value== "extent"){
+          //console.log(dojo.byId("region").value);
           OSMQueryWidget.areaId.push("");
-          OSMQueryWidget.areaId.push("(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")");
-          createRequest
-          .then(runRequest);
-        } else {
+          OSMQueryWidget.areaId.push("(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ");");
+          //this.createRequest.then(this.runRequest);
+          //
+        }
+        var key = registry.byId("osmkey").value;
+        var tag = registry.byId("osmtag").value;
+        //convert if everything is needed
+        if (tag[0]=="*"){
+          tag = "";
+        }
+        esriConfig.defaults.io.corsEnabledServers.push("overpass-api.de");
+        dataUrl  = "http://overpass-api.de/api/interpreter";
+        this.layersRequest = esriRequest({
+          url: dataUrl,
+          content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];' + OSMQueryWidget.areaId[0] + '(node["' + key + '"="' + tag + '"]' + OSMQueryWidget.areaId[1] + ');(._;>;);out;>;'},
+          handleAs: "json",
+          callbackParamName: "callback"
+        });
+        OSMQueryWidget.layersRequest.then(
+          function(response) {
+            if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?")){
+              //check for needed layers:
+              var pointGL = null;
+              for(element in response.elements){
+                if(response.elements[element].type == "node"){
+                  if (!pointGL){
+                    pointGL = OSMQueryWidget.createPointGraphicsLayer();
+                  }
+                  OSMQueryWidget.createPoints(pointGL, response.elements[element])
+                }
+              }
+              console.log(pointGL);
+              OSMQueryWidget.map.addLayer(pointGL);
+            }
+        }, function(error) {
+          console.log("Error: ", error.message);
+        });
+          //this.createRequest.then(this.runRequest);
           //queryExtent = ""
           //console.log(OSMQueryWidget.getExtent);
           //queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
@@ -230,16 +271,18 @@ define(['dojo/_base/declare',
 
           console.log(this.area);*/
 
-        }
+
 
         //
         //var queryExtent = "(" + String(extent[0].y) + "," + String(extent[0].x) + "," + String(extent[1].y) + "," + String(extent[1].x) + ")";
 
       },
       createRequest:function(){
+        console.log("create");
+        /*
         this.inherited(arguments);
         var key = dojo.byId("osmkey").value;
-        var tag = dojo.byId("osmtag").value;
+
         if (tag=="* (any value, including the ones listed below)"){
           tag = "";
         }
@@ -254,8 +297,11 @@ define(['dojo/_base/declare',
           handleAs: "json",
           callbackParamName: "callback"
         });
+        */
       },
       runRequest:function(){
+        console.log("run");
+        /*
         this.inherited(arguments);
         OSMQueryWidget.layersRequest.then(
           function(response) {
@@ -276,6 +322,7 @@ define(['dojo/_base/declare',
         }, function(error) {
           console.log("Error: ", error.message);
         });
+        */
       },
       updateExtent:function(){
         this.inherited(arguments);
