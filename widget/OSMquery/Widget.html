@@ -9,7 +9,7 @@
         <label >Key:</label>
       </td>
       <td>
-        <div data-dojo-type="dijit/form/FilteringSelect" id="osmkey" class="dijit-form-FilteringSelect" title="Key:" style="width:100%"></div>
+        <div data-dojo-type="dijit/form/Select" id="osmkey" class="dijit-form-FilteringSelect" title="Key:" style="width:100%"></div>
       </td>
     </tr>
     <tr>
@@ -17,7 +17,7 @@
         <label >Tag:</label>
       </td>
       <td>
-        <div data-dojo-type="dijit/form/FilteringSelect" id="osmtag" class="dijit-form-FilteringSelect" title="Tag:" style="width:100%"></div>
+        <div data-dojo-type="dijit/form/Select" id="osmtag" class="dijit-form-FilteringSelect" title="Tag:" style="width:100%"></div>
       </td>
     </tr>
   </table>
@@ -25,7 +25,7 @@
   <div class="sectionheads">
     Extent
   </div>
-  <div data-dojo-type="dijit/form/FilteringSelect" id="regionalSetting" class="dijit-form-FilteringSelect" title="Region definition:" style="width:100%; margin-bottom: 10px;"></div>
+  <div data-dojo-type="dijit/form/Select" id="regionalSetting" class="dijit-form-FilteringSelect" title="Region definition:" style="width:100%; margin-bottom: 10px;"></div>
   <table class="extent" id="extent">
     <tr>
       <td colspan="2" id="ymax" ></td>
@@ -38,11 +38,11 @@
 </table>
 <table style="width:100%" id ="regionTable">
   <tr>
-    <td style="width:130px">
-      <label >Region Name:</label>
+    <td>
+      <input type="text" data-dojo-props="placeHolder: 'Hannover, Deutschland'" value="Hannover, Deutschland" data-dojo-type="dijit/form/TextBox" id="region" style="width:100%"  />
     </td>
     <td>
-      <input type="text" data-dojo-props="placeHolder: 'Hannover, Deutschland'" value="" data-dojo-type="dijit/form/TextBox" id="region" style="width:100%"  />
+      <button data-dojo-type="dijit/form/Button" id="getLocation" type="button">Look up</button>
     </td>
   </tr>
 </table>

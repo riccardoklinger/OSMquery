@@ -82,57 +82,81 @@ define(['dojo/_base/declare',
         //registry.byId("osmkey").get('store').add({ name: "Test", id: 0 });
         //add all other items:
         keys = new Array();
-        areaId = new Array();
+        this.areaId = new Array();
         //getting configuration:
         var Configuration = this.config;
         //fill region select
-        registry.byId("regionalSetting").get('store').add({ name: "BBOX definition", id: 0 });
-        registry.byId("regionalSetting").get('store').add({ name: "Region definition", id: 1 });
-        dojo.attr("regionalSetting", "value", "Region definition");
+        var select = registry.byId("regionalSetting");
+        option1 = { value: "bbox", label: "BBOX definition", selected: false };
+        option2 = { value: "region", label: "Region definition", selected: true };
+        select.addOption([option1, option2]); // add all options at once as an array
+        //registry.byId("regionalSetting").get('store').add({ name: "BBOX definition", id: 0 });
+        //registry.byId("regionalSetting").get('store').add({ name: "Region definition", id: 1 });
+        //dojo.attr("regionalSetting", "value", "BBOX definition");
         domStyle.set("extent", "visibility", "collapse");
         dojo.connect(registry.byId('regionalSetting'),'onChange',lang.hitch(this, 'regionalSettingsChanged'));
-        k = 0;
+        //k = 0;
         for (key in Configuration){
           if (Configuration.hasOwnProperty(key)){
-            keys.push(key);
-            registry.byId("osmkey").get('store').add({ name: key, id: k });
-            k+=1;
+
+            //var select = registry.byId("regionalSetting");
+            option = { value: key, label: key, selected: false };
+            keys.push(option);
+
+            //registry.byId("osmkey").get('store').add({ name: key, id: k });
+            //k+=1;
           }
         }
-        dojo.attr("osmkey", "value", "shop");
-        dojo.attr("osmtag", "value", "bakery");
+        registry.byId("osmkey").addOption(keys);
+        //dojo.attr("osmkey", "value", "shop");
+        //dojo.attr("osmtag", "value", "bakery");
+        this.keyHasChanged();
         this.updateExtent();
         this.own(on(this.map, "pan", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "zoomEnd", lang.hitch(this, this.updateExtent)));
         this.own(on(this.map, "update-end", lang.hitch(this, this.updateExtent)));
         dojo.connect(registry.byId('osmkey'),'onChange',lang.hitch(this, 'keyHasChanged'));
+
+        registry.byId("getLocation").connect("onClick", lang.hitch(this, this.getExtent()));
+        //dojo.byId("getLocation").connect("onClick", function test(){console.log("clicked")});
+        //dojo.connect(dojo.byId("getLocation"), "onClick", OSMQueryWidget.getExtent(dojo.byId("region").value));
+
         keyStore = new Memory({data: keys}	);
-        this.own(on(dojo.byId("getOSMdata"),	'click', lang.hitch(this, this.doSearch)));
+        //this.own(on(dojo.byId("getOSMdata"),	'click', lang.hitch(this, this.doSearch)));
+
+        this.locationFound = false;
       },
       keyHasChanged:function() {
 
         var Configuration = this.config;
         //clear current combobox store
-        var folderListLength = registry.byId("osmtag").store.data.length
+        var folderListLength = registry.byId("osmtag").options.length;
         for(var n=0; n < folderListLength; n++){
-          registry.byId("osmtag").get('store').remove(n)
-        };
 
-        //populate box again:
-        k = 0;
-        currentKey = dojo.byId("osmkey").value;
-        tags = new Array();
+          registry.byId("osmtag").removeOption(registry.byId('osmtag').options[0]);
+
+        };
+        currentKey = registry.byId("osmkey").value;
+        //tags = new Array();
+        console.log(currentKey);
         for (tag in Configuration[currentKey]){
-            registry.byId("osmtag").get('store').add({ name: Configuration[currentKey][tag], id: k });
-            k+=1;
+            registry.byId("osmtag").addOption([{ value: Configuration[currentKey][tag], label: Configuration[currentKey][tag], selected: false }]);
         }
       },
       regionalSettingsChanged:function(){
         //get current state:
+        this.inherited(arguments);
+        console.log(this.locationFound);
+
         regSet=dojo.byId("regionalSetting").value;
-        if (regSet == "Region definition"){
+        if (regSet == "region"){
           domStyle.set("extent", "visibility", "collapse");
           domStyle.set("regionTable", "visibility", "visible");
+          if (this.locationFound == false){
+            var LocButton = registry.byId("getOSMdata");
+            LocButton.set("disabled", true);
+            //domStyle.set("getOSMdata", "disabled ", true);
+          }
         }
         else {
           domStyle.set("regionTable", "visibility", "collapse");
@@ -140,8 +164,10 @@ define(['dojo/_base/declare',
         }
 
       },
-      getExtent:function(regionString){
+      getExtent:function(){
         this.inherited(arguments);
+        regionString = dojo.byId("region").value;
+        //console.log(regionString);
         esriConfig.defaults.io.corsEnabledServers.push("nominatim.openstreetmap.org");
           nominatimURL  = 'https://nominatim.openstreetmap.org/search?q=' + regionString + "&format=json";
           console.log(nominatimURL);
@@ -156,9 +182,12 @@ define(['dojo/_base/declare',
               for(object in response){
                 console.log(response[object]);
                 if(response[object].osm_type == "relation"){
+                  console.log(response[object]);
                   nominatim_area_id = response[object].osm_id;
                   OSMQueryWidget.areaId.push('area(' + String(parseInt(nominatim_area_id) + 3600000000) + ')->.searchArea;');
                   OSMQueryWidget.areaId.push('(area.searchArea);');
+                  OSMQueryWidget.locationFound = true;
+                  OSMQueryWidget.regionalSettingsChanged();
                   break;
                 }
               }
@@ -183,12 +212,12 @@ define(['dojo/_base/declare',
           .then(runRequest);
         } else {
           //queryExtent = ""
-          console.log(OSMQueryWidget.getExtent);
+          //console.log(OSMQueryWidget.getExtent);
           //queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
           //var areaId;
           //this.areaId=this.getExtent(dojo.byId("region").value);
-          this.getExtent(dojo.byId("region").value)
-          .then(runRequest);
+          //this.getExtent(dojo.byId("region").value)
+          //.then(runRequest);
           /*var NominatimRun = 0;
           //while (this.areaId[0]<1){
           //()  if (NominatimRun <1){
