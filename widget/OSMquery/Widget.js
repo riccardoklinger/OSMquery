@@ -24,6 +24,8 @@ define(['dojo/_base/declare',
         "esri/symbols/SimpleFillSymbol",
         "esri/geometry/Geometry",
         "esri/geometry/Point",
+        "esri/geometry/Polyline",
+        "esri/geometry/Polygon",
         'esri/SpatialReference',
         "esri/geometry/projection",
         'esri/arcgis/Portal',
@@ -56,6 +58,8 @@ define(['dojo/_base/declare',
     SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol,
     Geometry,
     Point,
+    Polyline,
+    Polygon,
     SpatialReference,
     projection,
     arcgisPortal,
@@ -82,7 +86,6 @@ define(['dojo/_base/declare',
         //registry.byId("osmkey").get('store').add({ name: "Test", id: 0 });
         //add all other items:
         keys = new Array();
-        this.areaId = new Array();
         //getting configuration:
         var Configuration = this.config;
         //fill region select
@@ -164,6 +167,7 @@ define(['dojo/_base/declare',
           }
         }
         else {
+          registry.byId("getOSMdata").set("disabled", false);
           domStyle.set("regionTable", "visibility", "collapse");
           domStyle.set("extent", "visibility", "visible");
         }
@@ -189,6 +193,7 @@ define(['dojo/_base/declare',
                 if(response[object].osm_type == "relation"){
                   //console.log(response[object]);
                   nominatim_area_id = response[object].osm_id;
+                  OSMQueryWidget.areaId = new Array();
                   OSMQueryWidget.areaId.push('area(' + String(parseInt(nominatim_area_id) + 3600000000) + ')->.searchArea;');
                   OSMQueryWidget.areaId.push('(area.searchArea);');
                   OSMQueryWidget.areaString = response[object].display_name;
@@ -211,8 +216,9 @@ define(['dojo/_base/declare',
         QUERY_END = ');(._;>;);out;>;';
 
         //getExtent if not alread assigned:
-        if (registry.byId("regionalSetting").value== "extent"){
+        if (registry.byId("regionalSetting").value== "bbox"){
           //console.log(dojo.byId("region").value);
+          OSMQueryWidget.areaId = new Array();
           OSMQueryWidget.areaId.push("");
           OSMQueryWidget.areaId.push("(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ");");
           //this.createRequest.then(this.runRequest);
@@ -222,13 +228,20 @@ define(['dojo/_base/declare',
         var tag = registry.byId("osmtag").value;
         //convert if everything is needed
         if (tag[0]=="*"){
-          tag = "";
+          selector= '["' + key + '"]';
+        } else {
+          selector = '["' + key + '"="' + tag + '"]';
         }
         esriConfig.defaults.io.corsEnabledServers.push("overpass-api.de");
         dataUrl  = "http://overpass-api.de/api/interpreter";
+        dataJSON = '[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];' + OSMQueryWidget.areaId[0];
+        dataJSON += '(node' + selector + OSMQueryWidget.areaId[1];
+        dataJSON += 'way' + selector + OSMQueryWidget.areaId[1];
+        dataJSON += 'relation' + selector + OSMQueryWidget.areaId[1] + ');';
+        dataJSON += '(._;>;);out;>;'
         this.layersRequest = esriRequest({
           url: dataUrl,
-          content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"];' + OSMQueryWidget.areaId[0] + '(node["' + key + '"="' + tag + '"]' + OSMQueryWidget.areaId[1] + ');(._;>;);out;>;'},
+          content: {data:dataJSON},
           handleAs: "json",
           callbackParamName: "callback"
         });
@@ -237,6 +250,8 @@ define(['dojo/_base/declare',
             if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?")){
               //check for needed layers:
               var pointGL = null;
+              var lineGL = null;
+              var polyGL = null;
               for(element in response.elements){
                 if(response.elements[element].type == "node"){
                   if (!pointGL){
@@ -244,85 +259,39 @@ define(['dojo/_base/declare',
                   }
                   OSMQueryWidget.createPoints(pointGL, response.elements[element])
                 }
-              }
-              console.log(pointGL);
-              OSMQueryWidget.map.addLayer(pointGL);
-            }
-        }, function(error) {
-          console.log("Error: ", error.message);
-        });
-          //this.createRequest.then(this.runRequest);
-          //queryExtent = ""
-          //console.log(OSMQueryWidget.getExtent);
-          //queryExtent = "(" + dojo.byId("ymin").innerHTML + "," + dojo.byId("xmin").innerHTML + "," + dojo.byId("ymax").innerHTML + "," + dojo.byId("xmax").innerHTML + ")"
-          //var areaId;
-          //this.areaId=this.getExtent(dojo.byId("region").value);
-          //this.getExtent(dojo.byId("region").value)
-          //.then(runRequest);
-          /*var NominatimRun = 0;
-          //while (this.areaId[0]<1){
-          //()  if (NominatimRun <1){
-              this.areaId[0]=this.getExtent(dojo.byId("region").value);
-            }
-            NominatimRun = 1;
-          }
-          console.log("Area= ");
-          //this.area = this.areaId[0];
-
-          console.log(this.area);*/
-
-
-
-        //
-        //var queryExtent = "(" + String(extent[0].y) + "," + String(extent[0].x) + "," + String(extent[1].y) + "," + String(extent[1].x) + ")";
-
-      },
-      createRequest:function(){
-        console.log("create");
-        /*
-        this.inherited(arguments);
-        var key = dojo.byId("osmkey").value;
-
-        if (tag=="* (any value, including the ones listed below)"){
-          tag = "";
-        }
-
-        esriConfig.defaults.io.corsEnabledServers.push("overpass-api.de");
-        dataUrl  = "http://overpass-api.de/api/interpreter";
-        console.log(queryExtent);
-        var requestSend = false;
-        this.layersRequest = esriRequest({
-          url: dataUrl,
-          content: {data:'[out:json][timeout:60][date:"2018-09-16T18:48:39Z"]' + OSMQueryWidget.areaId[0] + ';(node["' + key + '"="' + tag + '"]' + OSMQueryWidget.areaId[1] + ';);(._;>;);out;>;'},
-          handleAs: "json",
-          callbackParamName: "callback"
-        });
-        */
-      },
-      runRequest:function(){
-        console.log("run");
-        /*
-        this.inherited(arguments);
-        OSMQueryWidget.layersRequest.then(
-          function(response) {
-            if(confirm("Your Query response contains " + response.elements.length + " objects. You want to add them?")){
-              //check for needed layers:
-              var pointGL = null;
-              for(element in response.elements){
-                if(response.elements[element].type == "node"){
-                  if (!pointGL){
-                    pointGL = OSMQueryWidget.createPointGraphicsLayer();
+                if(response.elements[element].type == "way"){
+                  path = new Array();
+                  //create array of point coordinates:
+                  for (node in response.elements[element].nodes){
+                    for (point in response.elements){
+                      if (response.elements[element].nodes[node] == response.elements[point].id){
+                        path.push([response.elements[point].lon,response.elements[point].lat]);
+                        break;
+                      }
+                    }
                   }
-                  OSMQueryWidget.createPoints(pointGL, response.elements[element])
+                  if (response.elements[element].nodes[0] != response.elements[element].nodes[response.elements[element].nodes.length - 1]){
+                    if (!lineGL){
+                      lineGL = OSMQueryWidget.createLineGraphicsLayer();
+                    }
+                    OSMQueryWidget.createLines(lineGL, response.elements[element], path)
+                  }
+                  else {
+                    if (!polyGL){
+                      polyGL = OSMQueryWidget.createPolygonGraphicsLayer();
+                    }
+                    OSMQueryWidget.createPolygons(polyGL, response.elements[element], path)
+                  }
                 }
               }
-              console.log(pointGL);
               OSMQueryWidget.map.addLayer(pointGL);
+              OSMQueryWidget.map.addLayer(lineGL);
+              OSMQueryWidget.map.addLayer(polyGL);
             }
         }, function(error) {
           console.log("Error: ", error.message);
         });
-        */
+
       },
       updateExtent:function(){
         this.inherited(arguments);
@@ -344,6 +313,7 @@ define(['dojo/_base/declare',
         }
       },
       createPointGraphicsLayer:function(){
+        console.log("add point layer");
         pointGL = new GraphicsLayer();
         pointGL.id = "nodes";
         if (this.map.graphicsLayerIds.includes("nodes")){
@@ -357,7 +327,37 @@ define(['dojo/_base/declare',
         }
         return pointGL;
       },
-      createPoints:function(gl, element){
+      createLineGraphicsLayer:function(){
+        console.log("add line layer");
+        lineGL = new GraphicsLayer();
+        lineGL.id = "lines";
+        if (this.map.graphicsLayerIds.includes("lines")){
+
+          for (var j = 0; j < this.map.graphicsLayerIds.length; j++) {
+            var layer = this.map.getLayer(this.map.graphicsLayerIds[j]);
+            if (layer.id == "lines") {
+              this.map.removeLayer(layer);
+            }
+          }
+        }
+        return lineGL;
+      },
+      createPolygonGraphicsLayer:function(){
+        console.log("add polygon layer");
+        polyGL = new GraphicsLayer();
+        polyGL.id = "polygons";
+        if (this.map.graphicsLayerIds.includes("polygons")){
+
+          for (var j = 0; j < this.map.graphicsLayerIds.length; j++) {
+            var layer = this.map.getLayer(this.map.graphicsLayerIds[j]);
+            if (layer.id == "polygons") {
+              this.map.removeLayer(layer);
+            }
+          }
+        }
+        return polyGL;
+      },
+      createInfoTemplate(element){
         var attr = element.tags;
         for (key in attr){
             if (key.indexOf(":")>0){
@@ -372,58 +372,46 @@ define(['dojo/_base/declare',
         var infoTemplate = new InfoTemplate();
         infoTemplate.title = "Attributes";
         infoTemplate.content = infoText;
-        s = new SimpleMarkerSymbol().setSize(60);
-        var g = new Graphic(new Point(element.lon, element.lat), s, attr, infoTemplate);
-        pointGL.add(g);
+        return [attr, infoTemplate]
       },
-      // onOpen: function(){
-      //   console.log('onOpen');
-      // },
+      createPoints:function(gl, element){
+        if (element.tags){
+          attr = this.createInfoTemplate(element);
+          s = new SimpleMarkerSymbol().setSize(10).setColor(new Color(new Color([255,0,0,0.8])));
+          var g = new Graphic(new Point(element.lon, element.lat), s, attr[0], attr[1]);
+          pointGL.add(g);
+        }
+      },
+      createLines:function(gl, element, path){
+        //check if polygon:
 
-      // onClose: function(){
-      //   console.log('onClose');
-      // },
+        attr = this.createInfoTemplate(element);
+        s = new SimpleLineSymbol().setWidth(5).setColor(new Color(new Color([255,255,0,0.8])));
 
-      // onMinimize: function(){
-      //   console.log('onMinimize');
-      // },
+        //loop over the nodes:
 
-      // onMaximize: function(){
-      //   console.log('onMaximize');
-      // },
+        var g = new Graphic(new Polyline(
+          {
+            hasZ: false,
+            hasM: false,
+            paths: [path],
+            spatialReference: { wkid: 4326 }
+          }), s, attr[0], attr[1]);
+        lineGL.add(g);
+      },
+      createPolygons:function(gl, element, path){
 
-/*      proofAdministrator:function(){
-
-        var info = new OAuthInfo({
-          popup: true,
-          portalUrl: this.appConfig.portalUrl
-          });
-          IdentityManager.registerOAuthInfos([info]);
-
-          portal = new arcgisPortal.Portal(this.appConfig.portalUrl).signIn().then(
-            function (portalUser){
-              console.log("Signed in to the portal: ", portalUser.role);
-            }
-          ).otherwise(
-          function (error){
-            console.log("Error occurred while signing in: ", error);
-          }
-          );
-      },*/
-
-      // onSignOut: function(){
-      //   console.log('onSignOut');
-      // }
-
-      // onPositionChange: function(){
-      //   console.log('onPositionChange');
-      // },
-
-      // resize: function(){
-      //   console.log('resize');
-      // }
-
-      //methods to communication between widgets:
-
+        attr = this.createInfoTemplate(element);
+        s = new SimpleFillSymbol()
+        s.color= [ 51,51, 204, 0.8 ];
+        var g = new Graphic(new Polygon(
+          {
+            hasZ: false,
+            hasM: false,
+            rings: [path],
+            spatialReference: { wkid: 4326 }
+          }), s, attr[0], attr[1]);
+        polyGL.add(g);
+      },
     });
   });
