@@ -67,6 +67,14 @@ class Toolbox(object):
                            json_file)
         return random.choice(config_json["overpass_servers"])
     @classmethod
+    def sanitize_field_name(cls, field_name):
+        field_name = field_name.replace(":", "_")
+        if field_name[0].isdigit():
+            field_name = "_" + field_name
+        return field_name
+
+
+    @classmethod
     def create_result_fc(cls, geometry_type, fields, timestamp):
         fc_name = '%ss_%s' % (geometry_type, str(timestamp))
         fc = join(arcpy.env.scratchWorkspace, fc_name)
@@ -85,16 +93,14 @@ class Toolbox(object):
         arcpy.AddField_management(fc, "DATETIME", "DATE", "", "", "",
                                   "DateTime")
         for field in fields:
+            field = Toolbox.sanitize_field_name(field)
+            arcpy.AddMessage("\tAdding attribute %s..." % field)
             try:
-                field = field.replace(":", "")
-                if field[0].isdigit():
-                    field = "_" + field
-                arcpy.AddMessage("\tAdding attribute %s..." % field)
                 arcpy.AddField_management(fc, field, "STRING", 255, "", "",
                                           field, "NULLABLE")
             except arcpy.ExecuteError as error:
                 arcpy.AddError(error)
-                arcpy.AddError("\tAdding attribute %s failed.")
+                arcpy.AddError("\t\tAdding attribute %s failed.")
         return fc
 
     @classmethod
@@ -132,7 +138,7 @@ class Toolbox(object):
         # Per geometry type, gather all atributes present in the data
         # through elements per geometry type and collect their attributes
         # if user wants to get all the attributes
-        if geoOnly == False:
+        if not geoOnly:
             point_fc_fields = Toolbox.get_attributes_from_features(points)
             line_fc_fields = Toolbox.get_attributes_from_features(lines)
             polygon_fc_fields = Toolbox.get_attributes_from_features(polygons)
@@ -186,14 +192,13 @@ class Toolbox(object):
                     if not geoOnly:
                         for tag in element["tags"]:
                             try:
-                                if tag[0].isdigit():
-                                    row.setValue("_" + tag.replace(":", ""),
-                                             element["tags"][tag])
-                                else:
-                                    row.setValue(tag.replace(":", ""),
-                                             element["tags"][tag])
+                                field_name = Toolbox.sanitize_field_name(tag)
+                                row.setValue(field_name, element["tags"][tag])
                             except:
-                                arcpy.AddMessage("Adding value failed.")
+                                arcpy.AddWarning("\tAdding value %s to field "
+                                                 "%s (raw: %s) failed." %
+                                                 (element["tags"][tag],
+                                                  field_name, tag))
                     point_fc_cursor.insertRow(row)
                     del row
                 if element["type"] == "way" and "tags" in element:
@@ -219,14 +224,14 @@ class Toolbox(object):
                             if "tags" in element:
                                 for tag in element["tags"]:
                                     try:
-                                        if tag[0].isdigit():
-                                            row.setValue("_" + tag.replace(":", ""),
-                                                     element["tags"][tag])
-                                        else:
-                                            row.setValue(tag.replace(":", ""),
-                                                     element["tags"][tag])
+                                        field_name = Toolbox.sanitize_field_name(tag)
+                                        row.setValue(field_name, element["tags"][tag])
                                     except:
-                                        arcpy.AddMessage("Adding value failed.")
+                                        arcpy.AddWarning("\tAdding value %s to "
+                                                         "field %s (raw: %s) "
+                                                         "failed." %
+                                                         (element["tags"][tag],
+                                                          field_name, tag))
                         polygon_fc_cursor.insertRow(row)
                         del row
                     else:  # lines have different start end endnodes:
@@ -240,18 +245,18 @@ class Toolbox(object):
                             if "tags" in element:
                                 for tag in element["tags"]:
                                     try:
-                                        if tag[0].isdigit():
-                                            row.setValue("_" + tag.replace(":", ""),
-                                                     element["tags"][tag])
-                                        else:
-                                            row.setValue(tag.replace(":", ""),
-                                                     element["tags"][tag])
+                                        field_name = Toolbox.sanitize_field_name(tag)
+                                        row.setValue(field_name, element["tags"][tag])
                                     except:
-                                        arcpy.AddMessage("Adding value failed.")
+                                        arcpy.AddWarning("\tAdding value %s to "
+                                                         "field %s (raw: %s) "
+                                                         "failed." %
+                                                         (element["tags"][tag],
+                                                          field_name, tag))
                         line_fc_cursor.insertRow(row)
                         del row
             except:
-                arcpy.AddWarning("OSM element %s could not be written to FC" %
+                arcpy.AddWarning("\nOSM element %s could not be written to FC" %
                                  element["id"])
         if fcs[0]:
             del point_fc_cursor
@@ -574,8 +579,13 @@ class GetOSMDataSimple(object):
             arcpy.AddMessage("\tNo data found!")
             return
         else:
-            arcpy.AddMessage("\tCollected %s objects (including reverse "
-                             "objects)" % len(data["elements"]))
+            points, lines, polygons = Toolbox.extract_features_from_json(data)
+            arcpy.AddMessage("\nCollected %s point features (including "
+                             "reverse objects)" % len(points))
+            arcpy.AddMessage("Collected %s line features (including reverse "
+                         "objects)" % len(lines))
+            arcpy.AddMessage("Collected %s polygon features (including "
+                             "reverse objects)" % len(polygons))
 
         result_fcs = Toolbox.fill_feature_classes(data, params[7].value, params[8].value)
         if result_fcs[0]:
