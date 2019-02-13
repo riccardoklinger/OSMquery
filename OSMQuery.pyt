@@ -543,6 +543,8 @@ class GetOSMDataSimple(object):
         elif len(tag_values) > 1:
             tag_values = "|".join(tag_values)
             arcpy.AddMessage("\nCollecting " + tag_key + " = " + tag_values)
+            tag_values = tag_values.replace("|", "$|^")
+            tag_values = "^%s$" % tag_values
             node_data = 'node["' + tag_key + '"~"' + tag_values + '"]'
             way_data = 'way["' + tag_key + '"~"' + tag_values + '"]'
             relation_data = 'relation["' + tag_key + '"~"' + tag_values + '"]'
