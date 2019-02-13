@@ -68,7 +68,7 @@ class Toolbox(object):
         return random.choice(config_json["overpass_servers"])
     @classmethod
     def sanitize_field_name(cls, field_name):
-        field_name = field_name.replace(":", "_")
+        field_name = field_name.replace(":", "_").replace(".", "_")
         if field_name[0].isdigit():
             field_name = "_" + field_name
         return field_name
