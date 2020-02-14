@@ -498,17 +498,20 @@ class GetOSMDataSimple(object):
         parameter. This method is called after internal validation."""
         # If only time is selected, year will be autofilled with "1899"
         earliest_date = datetime.datetime(2004, 8, 9, 0, 0)
-        if params[7].value < earliest_date:
-            params[7].setWarningMessage("No or invalid date provided. The "
+        if params[7].value is not None and params[7].value < earliest_date:
+            params[7].setWarningMessage("Invalid date provided. The "
                                         "date to be queried must be "
                                         "2004-08-09 (9 August 2004) or later.")
         return
 
     def execute(self, params, messages):
         """The code that is run, when the ArcGIS tool is run."""
-
-        query_date = QUERY_DATE.replace("timestamp", params[7].value.strftime(
-                "%Y-%m-%dT%H:%M:%SZ"))
+        
+        if params[7].value is not None:
+            query_date = QUERY_DATE.replace("timestamp", params[7].value.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"))
+        else:
+            query_date = ';('
 
         # Create the spatial reference and set the geographic transformation
         # in the environment settings (if given)
@@ -672,8 +675,12 @@ class GetOSMDataExpert(object):
         """The source code of the tool."""
         # Get data using urllib
 
-        query_date = QUERY_DATE.replace("timestamp", params[1].value.strftime(
-                "%Y-%m-%dT%H:%M:%SZ"))
+        if params[1].value is not None:
+            query_date = QUERY_DATE.replace("timestamp", params[1].value.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"))
+        else: 
+            query_date = ';('
+
         query = (QUERY_START + query_date + params[0].valueAsText +
                  QUERY_END)
         arcpy.AddMessage("Issuing Overpass API query:")
