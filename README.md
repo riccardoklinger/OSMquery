@@ -23,7 +23,7 @@ Download this repository (and unzip, if necessary). Either navigate to it in Arc
 
 ## Prerequisites
 The plugin was developed using ArcGIS 10.6 and ArcGIS Pro 2.2.2 but it was tested on ArcGIS 10.4.1 as well.
-The plugin only uses core modules from Python2/3:
+Besides arcpy, the plugin only uses core modules from Python2/3:
 
 * urllib  for Python3 or urllib2 if you're on Python2
 * json
