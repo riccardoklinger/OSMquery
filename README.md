@@ -33,7 +33,7 @@ Besides arcpy, the plugin only uses core modules from Python2/3:
 * os
 * arcpy
 
-These core modules should be already part of your Python version which was installed alongside with ArcGIS Pro and/or ArcMap.
+The core modules should be already part of your Python version which was installed alongside with ArcGIS Pro and/or ArcMap.
 
 ## More Details on Usage
 ### Querying OSM Tags
